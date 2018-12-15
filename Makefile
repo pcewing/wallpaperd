@@ -1,21 +1,26 @@
-
 DEBUG_LEVEL=-g3
-INCLUDE=-I./inc/ 
+
+INC=-I./inc
+SRC=./src
+
 CFLAGS=$(DEBUG_LEVEL) -Wall -Wextra `pkg-config --cflags glib-2.0`
 LDFLAGS=`pkg-config --libs glib-2.0`
 
+all: wallpaperd
+
+
 log:
-	gcc -c -o build/log.o $(INCLUDE) src/log.c
+	gcc -c -o build/log.o $(INC) $(SRC)/log.c
 
 util: log
-	gcc -c -o build/util.o $(INCLUDE) src/util.c
+	gcc -c -o build/util.o $(INC) $(SRC)/util.c
 
 enumerate: util
-	gcc -c -o build/enumerate.o $(INCLUDE) src/enumerate.c
+	gcc -c -o build/enumerate.o $(INC) $(SRC)/enumerate.c
 
-wpr: enumerate
-	cc -o build/wpr $(INCLUDE) src/wpr.c build/util.o build/log.o build/enumerate.o $(CFLAGS) $(LDFLAGS)
+wallpaperd: enumerate
+	cc -o build/wallpaperd $(INC) $(SRC)/main.c build/util.o build/log.o build/enumerate.o $(CFLAGS) $(LDFLAGS)
 
 clean:
-	rm -f build/wpr build/util.o build/enumerate.o build/log.o
+	rm -f build/wallpaperd build/util.o build/enumerate.o build/log.o
 

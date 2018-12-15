@@ -2,10 +2,23 @@
 #include "util.h"
 #include "enumerate.h"
 
-void
-print_debug_info(const struct file_enumeration_node_t* node)
+int
+main_loop(const struct file_enumeration_t* enumeration)
 {
-    if (node->m_path) LOGINFO("Processing path: %s", node->m_path);
+    // TODO: Actually seed this
+    wpd_srand(1);
+
+    while (1)
+    {
+        int index = wpd_rand() % enumeration->node_count;
+        LOGINFO("Setting wallpaper: %s",  enumeration->nodes[index]->m_path);
+
+        if (wpd_sleep(1) != 0)
+        {
+            LOGERROR("interrupted by a signal handler");
+            wpd_exit(-1);
+        }
+    }
 }
 
 int
@@ -19,7 +32,8 @@ process_files(const char * path)
         return enumeration_result;
     }
 
-    iterate_file_enumeration(enumeration, print_debug_info);
+    main_loop(enumeration);
+
     free_enumeration(&enumeration);
 
     return 0;

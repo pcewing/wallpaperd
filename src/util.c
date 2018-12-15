@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "util.h"
 
@@ -37,5 +38,23 @@ char*
 getextension(const char *filename)
 {
     return getafter(filename, '.');
+}
+
+unsigned int
+wpd_sleep(unsigned int seconds)
+{
+    return sleep(seconds);
+}
+
+void
+wpd_srand(unsigned int seed)
+{
+    srand(seed);
+}
+
+int
+wpd_rand()
+{
+    return rand();
 }
 

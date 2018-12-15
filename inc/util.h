@@ -17,5 +17,14 @@ getfilename(const char *pathname);
 char*
 getextension(const char *filename);
 
+unsigned int
+wpd_sleep(unsigned int seconds);
+
+void
+wpd_srand(unsigned int seed);
+
+int
+wpd_rand();
+
 #endif
 
