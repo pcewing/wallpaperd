@@ -1,6 +1,7 @@
 #include "log.h"
 #include "util.h"
 #include "enumerate.h"
+#include "wallpaper.h"
 
 int
 main_loop(const struct file_enumeration_t* enumeration)
@@ -11,7 +12,8 @@ main_loop(const struct file_enumeration_t* enumeration)
     while (1)
     {
         int index = wpd_rand() % enumeration->node_count;
-        LOGINFO("Setting wallpaper: %s",  enumeration->nodes[index]->m_path);
+
+        set_wallpaper(enumeration->nodes[index]->m_path);
 
         if (wpd_sleep(1) != 0)
         {
