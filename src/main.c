@@ -14,17 +14,18 @@ main_loop(const struct file_enumeration_t* enumeration)
     {
         int index = wpd_rand() % enumeration->node_count;
 
-        struct wpd_image_t* image = NULL;
-        int load_image_result = load_image(enumeration->nodes[index]->m_path, &image);
-        if (load_image_result != 0)
-        {
-            LOGERROR("Failed to load image");
-            wpd_exit(-1);
-        }
+        //struct wpd_image_t* image = NULL;
+        //int load_image_result = load_image(enumeration->nodes[index]->m_path, &image);
+        //if (load_image_result != 0)
+        //{
+            //LOGERROR("Failed to load image");
+            //wpd_exit(-1);
+        //}
 
-        set_wallpaper(image);
+        //set_wallpaper(image);
+        wpd_set_wallpaper(enumeration->nodes[index]->m_path);
 
-        free_image(&image);
+        //free_image(&image);
 
         if (wpd_sleep(10) != 0)
         {

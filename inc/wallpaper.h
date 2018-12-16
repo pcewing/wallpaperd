@@ -6,4 +6,7 @@
 void
 set_wallpaper(const struct wpd_image_t * image);
 
+void
+wpd_set_wallpaper(const char * path);
+
 #endif
