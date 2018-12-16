@@ -1,3 +1,6 @@
+#ifndef ENUMERATE_H
+#define ENUMERATE_H
+
 #define ftw_error_t int
 
 #define FILE_ENUMERATION_SUCCESS 0
@@ -33,4 +36,6 @@ iterate_file_enumeration(const struct file_enumeration_t* enumeration,
 
 ftw_error_t
 free_enumeration(struct file_enumeration_t** enumeration);
+
+#endif
 
