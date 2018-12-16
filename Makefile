@@ -4,9 +4,6 @@ SRC=./src
 CFLAGS_GLIB= `pkg-config --cflags glib-2.0`
 LDFLAGS_GLIB=`pkg-config --libs glib-2.0`
 
-CFLAGS_MAGICK_WAND=`pkg-config --cflags MagickWand`
-LDFLAGS_MAGICK_WAND=`pkg-config --libs MagickWand`
-
 CFLAGS_XLIB=`pkg-config --cflags x11`
 LDFLAGS_XLIB=`pkg-config --libs x11`
 
@@ -16,11 +13,11 @@ LDFLAGS_IMLIB2=`pkg-config --libs imlib2`
 DEBUG_LEVEL=-g3
 
 CFLAGS_BASE=$(DEBUG_LEVEL) -Wall -Wextra
-CFLAGS=$(CFLAGS_BASE) $(CFLAGS_MAGICK_WAND) $(CFLAGS_XLIB) $(CFLAGS_IMLIB2)
+CFLAGS=$(CFLAGS_BASE) $(CFLAGS_XLIB) $(CFLAGS_IMLIB2)
 
-LDFLAGS=$(LDFLAGS_MAGICK_WAND) $(LDFLAGS_XLIB) $(LDFLAGS_IMLIB2)
+LDFLAGS=$(LDFLAGS_XLIB) $(LDFLAGS_IMLIB2)
 
-OBJECTS=build/util.o build/log.o build/enumerate.o build/wallpaper.o build/image.o
+OBJECTS=build/util.o build/log.o build/enumerate.o build/wallpaper.o
 
 all: wallpaperd
 
@@ -39,10 +36,7 @@ enumerate.o: build_dir
 wallpaper.o: build_dir
 	gcc -c -o build/wallpaper.o $(INC) -g3 $(SRC)/wallpaper.c
 
-image.o: build_dir
-	gcc -c -o build/image.o $(SRC)/image.c $(INC) $(CFLAGS) $(LDFLAGS)
-
-wallpaperd: build_dir enumerate.o log.o util.o wallpaper.o image.o
+wallpaperd: build_dir enumerate.o log.o util.o wallpaper.o
 	cc -o build/wallpaperd $(INC) $(SRC)/main.c $(OBJECTS) $(CFLAGS) $(LDFLAGS)
 
 clean:

@@ -1,7 +1,6 @@
 #include "log.h"
 #include "util.h"
 #include "enumerate.h"
-#include "image.h"
 #include "wallpaper.h"
 
 int
