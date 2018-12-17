@@ -21,7 +21,7 @@ unsigned int
 wpd_sleep(unsigned int seconds);
 
 void
-wpd_srand(unsigned int seed);
+wpd_srand();
 
 int
 wpd_rand();

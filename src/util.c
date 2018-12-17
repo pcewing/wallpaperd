@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "util.h"
 
@@ -47,9 +48,12 @@ wpd_sleep(unsigned int seconds)
 }
 
 void
-wpd_srand(unsigned int seed)
+wpd_srand()
 {
-    srand(seed);
+    struct timespec spec;
+    clock_gettime(CLOCK_REALTIME, &spec);
+
+    srand(spec.tv_nsec);
 }
 
 int
