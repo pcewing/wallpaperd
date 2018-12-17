@@ -196,15 +196,6 @@ apply_pixmap(const struct x11_context_t* x11, Imlib_Image image)
 	unsigned long length, after;
 	unsigned char *data_root = NULL, *data_esetroot = NULL;
 
-    x11_temp = malloc(sizeof(struct x11_context_t));
-    /* local display to set closedownmode on */
-    Display *disp2;
-    Window root2;
-    int depth2;
-    int w, h;
-
-    LOGDEBUG("Falling back to XSetRootWindowPixmap\n");
-
     XColor color;
     Colormap cmap = DefaultColormap(x11->display, DefaultScreen(x11->display));
     XAllocNamedColor(x11->display, cmap, "black", &color, &color);
@@ -213,24 +204,20 @@ apply_pixmap(const struct x11_context_t* x11, Imlib_Image image)
 	draw_image_on_pixmap(image_pixmap, image, 0, 0, 1, 1, 0);
 
     /* create new display, copy pixmap to new display */
-    disp2 = XOpenDisplay(NULL);
-    if (!disp2)
-        LOGERROR("Can't reopen X display.");
-    root2 = RootWindow(disp2, DefaultScreen(disp2));
-    depth2 = DefaultDepth(disp2, DefaultScreen(disp2));
-
-    x11_temp->display = disp2;
-    x11_temp->root = root2;
-    x11_temp->depth = depth2;
+    error = create_x11_context(&x11_temp);
+    if (error != 0)
+    {
+        return error;
+    }
 
     XSync(x11->display, False);
-    pmap_d2 = XCreatePixmap(disp2, root2, x11->screen->width, x11->screen->height, depth2);
+    pmap_d2 = XCreatePixmap(x11_temp->display, x11_temp->root, x11->screen->width, x11->screen->height, x11_temp->depth);
     gcvalues.fill_style = FillTiled;
     gcvalues.tile = image_pixmap;
-    gc = XCreateGC(disp2, pmap_d2, GCFillStyle | GCTile, &gcvalues);
-    XFillRectangle(disp2, pmap_d2, gc, 0, 0, x11->screen->width, x11->screen->height);
-    XFreeGC(disp2, gc);
-    XSync(disp2, False);
+    gc = XCreateGC(x11_temp->display, pmap_d2, GCFillStyle | GCTile, &gcvalues);
+    XFillRectangle(x11_temp->display, pmap_d2, gc, 0, 0, x11->screen->width, x11->screen->height);
+    XFreeGC(x11_temp->display, gc);
+    XSync(x11_temp->display, False);
     XSync(x11->display, False);
 
     error = update_props(x11_temp, pmap_d2);
