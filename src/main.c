@@ -1,33 +1,34 @@
+#include "core.h"
 #include "log.h"
-#include "util.h"
 #include "enumerate.h"
 #include "wallpaper.h"
-#include "wallpaper2.h"
 
-#define WALLPAPER
-//#define WALLPAPER2
-
-int
-main_loop(const struct file_enumeration_t* enumeration)
+wpd_error
+wpd_initialize(struct x11_context_t** x11)
 {
     wpd_srand();
 
-#ifdef WALLPAPER
+    TRY(wpd_create_x11_context(x11));
+
+    wpd_initialize_libs(*x11);
+
+    return WPD_ERROR_SUCCESS;
+}
+
+wpd_error
+wpd_cleanup(struct x11_context_t** x11)
+{
+    TRY(wpd_destroy_x11_context(x11));
+
+    return WPD_ERROR_SUCCESS;
+}
+
+wpd_error
+wpd_main_loop(const struct file_enumeration_t* enumeration)
+{
     static struct x11_context_t* x11 = NULL;
-    int error;
 
-    error = create_x11_context(&x11);
-    if (error != 0)
-    {
-        return error;
-    }
-
-    initialize_imlib(x11);
-#endif
-
-#ifdef WALLPAPER2
-    init_x_and_imlib();
-#endif
+    TRY(wpd_initialize(&x11));
 
     while (1)
     {
@@ -35,13 +36,7 @@ main_loop(const struct file_enumeration_t* enumeration)
 
         LOGINFO("Setting wallpaper to %s", enumeration->nodes[index]->m_path);
 
-#ifdef WALLPAPER
         wpd_set_wallpaper(x11, enumeration->nodes[index]->m_path);
-#endif
-
-#ifdef WALLPAPER2
-        set_bg(enumeration->nodes[index]->m_path);
-#endif
 
         if (wpd_sleep(2) != 0)
         {
@@ -50,34 +45,25 @@ main_loop(const struct file_enumeration_t* enumeration)
         }
     }
 
-#ifdef WALLPAPER
-    destroy_x11_context(&x11);
-#endif
+    TRY(wpd_cleanup(&x11));
 
-#ifdef WALLPAPER2
-#endif
-
-
+    return WPD_ERROR_SUCCESS;
 }
 
-int
-process_files(const char * path)
+wpd_error
+wpd_main(const char * path)
 {
     struct file_enumeration_t* enumeration = NULL;
 
-    ftw_error_t enumeration_result = enumerate_files(path, &enumeration);
-    if (enumeration_result != FILE_ENUMERATION_SUCCESS)
-    {
-        return enumeration_result;
-    }
+    TRY(enumerate_files(path, &enumeration));
 
     LOGINFO("Found %i wallpaper files!", enumeration->node_count);
 
-    main_loop(enumeration);
+    TRY(wpd_main_loop(enumeration));
 
     free_enumeration(&enumeration);
 
-    return 0;
+    return WPD_ERROR_SUCCESS;
 }
 
 int
@@ -85,15 +71,17 @@ main(int argc, char *argv[])
 {
     UNUSED(argc);
     UNUSED(argv);
+    wpd_error error;
 
     char* path = (argc > 1) ? argv[1] : ".";
 
-    if (process_files(path) != 0)
+    error = wpd_main(path);
+    if (error != WPD_ERROR_SUCCESS)
     {
-        LOGERROR("TODO: Uh oh\n");
-        wpd_exit(WPD_EXIT_FAILURE);
+        LOGERROR("Unhandled error encountered: %s\n", wpd_error_str(error));
+        wpd_exit(error);
     }
 
-    wpd_exit(WPD_EXIT_SUCCESS);
+    wpd_exit(WPD_ERROR_SUCCESS);
 }
 

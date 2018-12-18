@@ -1,6 +1,7 @@
 #include "log.h"
 
 #include <stdio.h>
+#include <time.h>
 
 const char*
 log_level_str(const log_level_t level)
@@ -20,6 +21,9 @@ log_level_str(const log_level_t level)
 
 void LOG(const log_level_t level, const char* format, ...)
 {
+    struct timespec tp;
+    clock_gettime(CLOCK_REALTIME, &tp);
+
     printf("[%s] ", log_level_str(level));
 
     va_list args;

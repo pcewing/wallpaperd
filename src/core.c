@@ -3,14 +3,29 @@
 #include <unistd.h>
 #include <time.h>
 
-#include "util.h"
+#include "core.h"
+
+const char* error_strings[] = {
+    "WPD_ERROR_SUCCESS",
+    "WPD_ERROR_FAILURE",
+    "WPD_ERROR_UNKNOWN_FILENAME",
+    "WPD_ERROR_UNKNOWN_EXTENSION",
+    "WPD_ERROR_NULL_PARAM",
+    "WPD_ERROR_TODO"
+};
 
 void wpd_exit(int exit_code)
 {
     exit(exit_code);
 }
 
-void die(const char * message)
+const char*
+wpd_error_str(wpd_error error)
+{
+    return error_strings[error];
+}
+
+void wpd_die(const char * message)
 {
     printf("%s\n", message);
     exit(1);
@@ -30,13 +45,13 @@ getafter(const char *str, const char c)
 }
 
 char*
-getfilename(const char *pathname)
+wpd_get_filename(const char *pathname)
 {
     return getafter(pathname, '/');
 }
 
 char*
-getextension(const char *filename)
+wpd_get_extension(const char *filename)
 {
     return getafter(filename, '.');
 }

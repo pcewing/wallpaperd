@@ -1,18 +1,20 @@
 #ifndef WALLPAPER_H
 #define WALLPAPER_H
 
-extern struct x11_context_t;
+#include "core.h"
 
-int
-create_x11_context(struct x11_context_t** result);
+struct x11_context_t;
+
+wpd_error
+wpd_create_x11_context(struct x11_context_t** result);
+
+wpd_error
+wpd_destroy_x11_context(struct x11_context_t** result);
 
 void
-destroy_x11_context(struct x11_context_t** result);
+wpd_initialize_libs(const struct x11_context_t* x11);
 
-void
-initialize_imlib(const struct x11_context_t* x11);
-
-int
+wpd_error
 wpd_set_wallpaper(const struct x11_context_t* x11, const char * path);
 
 #endif

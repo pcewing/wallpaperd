@@ -1,22 +1,23 @@
-#include "wallpaper.h"
-#include "log.h"
-
 #include <stdlib.h>
+#include <string.h>
+
+#include <Imlib2.h>
+
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
 #include <X11/Xlib.h>
 
-#include <string.h>
-#include <X11/Xutil.h>
-#include <Imlib2.h>
+#include "wallpaper.h"
+#include "log.h"
+#include "core.h"
 
 #define IMLIB_CACHE_SIZE 32 * 1024 * 1024
 
 #define ERROR_TODO -1
 #define TODO_SUCCESS 0
 
-// TODO I shouldn't have to define this?
-#define XA_PIXMAP 20
-
-struct x11_context_t {
+struct x11_context_t
+{
     Display *display;
     Visual *visual;
     Screen *screen;
@@ -27,8 +28,8 @@ struct x11_context_t {
 };
 
 void
-draw_image_on_pixmap(Drawable d, Imlib_Image im, int x, int y,
-                                   char dither, char blend, char alias)
+wpd_draw_image_on_pixmap(Drawable d, Imlib_Image im, int x, int y,
+    char dither, char blend, char alias)
 {
    imlib_context_set_image(im);
    imlib_context_set_drawable(d);
@@ -39,8 +40,8 @@ draw_image_on_pixmap(Drawable d, Imlib_Image im, int x, int y,
    imlib_render_image_on_drawable(x, y);
 }
 
-int
-create_x11_context(struct x11_context_t** result)
+wpd_error
+wpd_create_x11_context(struct x11_context_t** result)
 {
     struct x11_context_t* x11;
 
@@ -66,14 +67,20 @@ create_x11_context(struct x11_context_t** result)
     return TODO_SUCCESS;
 }
 
-void
-destroy_x11_context(struct x11_context_t** result)
+wpd_error
+wpd_destroy_x11_context(struct x11_context_t** result)
 {
-    free(result);
+    if (!result || !(*result))
+    {
+        return WPD_ERROR_NULL_PARAM;
+    }
+
+    free(*result);
+    return WPD_ERROR_SUCCESS;
 }
 
 void
-initialize_imlib(const struct x11_context_t* x11)
+wpd_initialize_libs(const struct x11_context_t* x11)
 {
 	imlib_context_set_display(x11->display);
 	imlib_context_set_visual(x11->visual);
@@ -85,7 +92,7 @@ initialize_imlib(const struct x11_context_t* x11)
 	imlib_set_cache_size(IMLIB_CACHE_SIZE);
 }
 
-Pixmap create_pixmap_from_image(Imlib_Image* image, const struct x11_context_t* x11)
+Pixmap wpd_create_pixmap_from_image(Imlib_Image* image, const struct x11_context_t* x11)
 {
     int w, h;
     Pixmap pixmap;
@@ -95,65 +102,72 @@ Pixmap create_pixmap_from_image(Imlib_Image* image, const struct x11_context_t* 
     w = imlib_image_get_width();
     h = imlib_image_get_height();
 
-    // Create a pixmap and draw the image onto it
-    pixmap = XCreatePixmap(x11->display, x11->root, w, h, x11->depth);
-	draw_image_on_pixmap(pixmap, image, 0, 0, 1, 1, 0);
-
-    return pixmap;
+    // Create a pixmap with the same dimensions as the image
+    return XCreatePixmap(x11->display, x11->root, w, h, x11->depth);
 }
 
-int
-update_props(const struct x11_context_t* x11, const Pixmap pmap_d2)
+wpd_error
+wpd_get_pixmap_property(const struct x11_context_t* x11,
+    const char * prop_name, unsigned char** result)
 {
-	Atom prop_root, prop_esetroot, type;
+	Atom prop, type;
 	int format;
 	unsigned long length, after;
+    unsigned char* data;
+    
+	prop = XInternAtom(x11->display, prop_name, True);
+    if (prop == None)
+    {
+        LOGERROR("Couldn't find the %s atom", prop_name);
+        return ERROR_TODO;
+    }
+
+    XGetWindowProperty(x11->display, x11->root, prop, 0L, 1L, False,
+        AnyPropertyType, &type, &format, &length, &after, &data);
+
+    if (type != XA_PIXMAP)
+    {
+        LOGERROR("%s property is not of type pixmap", prop_name);
+        return ERROR_TODO;
+    }
+
+    (*result) = data;
+    return WPD_ERROR_SUCCESS;
+}
+
+wpd_error
+wpd_set_pixmap_property(const struct x11_context_t* x11,
+    const char * prop_name, const Pixmap pixmap)
+{
+    Atom prop;
+
+    prop = XInternAtom(x11->display, prop_name, False);
+
+    if (prop == None)
+    {
+        LOGERROR("creation of pixmap property failed.");
+        return ERROR_TODO;
+    }
+
+    XChangeProperty(x11->display, x11->root, prop, XA_PIXMAP, 32,
+        PropModeReplace, (unsigned char *) &pixmap, 1);
+
+    return WPD_ERROR_SUCCESS;
+}
+
+wpd_error
+wpd_update_pixmap_properties(const struct x11_context_t* x11,
+    const Pixmap background_pixmap)
+{
 	unsigned char *data_root = NULL, *data_esetroot = NULL;
 
-	prop_root = XInternAtom(x11->display, "_XROOTPMAP_ID", True);
-    {
-        if (prop_root == None)
-        {
-            LOGERROR("Couldn't find the _XROOTPMAP_ID atom");
-            return ERROR_TODO;
-        }
-
-        // Get the _XROOTPMAP_ID property from the root window
-        XGetWindowProperty(x11->display, x11->root, prop_root, 0L, 1L,
-            False, AnyPropertyType, &type, &format, &length, &after, &data_root);
-
-        // Make sure the property is a pixmap
-        if (type != XA_PIXMAP)
-        {
-            LOGERROR("_XROOTPMAP_ID property is not of type pixmap");
-            return ERROR_TODO;
-        }
-    }
-
-	prop_esetroot = XInternAtom(x11->display, "ESETROOT_PMAP_ID", True);
-    {
-        if (prop_esetroot == None)
-        {
-            LOGERROR("Couldn't find the ESETROOT_PMAP_ID atom");
-            return ERROR_TODO;
-        }
-
-        // Get the ESETROOT_PMAP_ID property from the root window
-        XGetWindowProperty(x11->display, x11->root, prop_esetroot, 0L, 1L,
-            False, AnyPropertyType, &type, &format, &length, &after,
-            &data_esetroot);
-
-        // Make sure the property is a pixmap
-        if (type != XA_PIXMAP)
-        {
-            LOGERROR("ESETROOT_PMAP_ID property is not of type pixmap");
-            return ERROR_TODO;
-        }
-    }
+    TRY(wpd_get_pixmap_property(x11, "_XROOTPMAP_ID", &data_root));
+    TRY(wpd_get_pixmap_property(x11, "ESETROOT_PMAP_ID", &data_esetroot));
 
     // If both properties are the same pixmap
     if (*((Pixmap *) data_root) == *((Pixmap *) data_esetroot))
     {
+        // TODO: Understand why we do this
         XKillClient(x11->display, *((Pixmap *) data_root));
     }
 
@@ -163,83 +177,71 @@ update_props(const struct x11_context_t* x11, const Pixmap pmap_d2)
 	if (data_esetroot)
 		XFree(data_esetroot);
 
-	/* This will locate the property, creating it if it doesn't exist */
-	prop_root = XInternAtom(x11->display, "_XROOTPMAP_ID", False);
-	prop_esetroot = XInternAtom(x11->display, "ESETROOT_PMAP_ID", False);
+    TRY(wpd_set_pixmap_property(x11, "_XROOTPMAP_ID", background_pixmap));
+    TRY(wpd_set_pixmap_property(x11, "ESETROOT_PMAP_ID", background_pixmap));
 
-	if (prop_root == None || prop_esetroot == None)
-    {
-		LOGERROR("creation of pixmap property failed.");
-        return ERROR_TODO;
-    }
-
-	XChangeProperty(x11->display, x11->root, prop_root, XA_PIXMAP, 32, PropModeReplace, (unsigned char *) &pmap_d2, 1);
-	XChangeProperty(x11->display, x11->root, prop_esetroot, XA_PIXMAP, 32,
-			PropModeReplace, (unsigned char *) &pmap_d2, 1);
-
-    return 0;
+    return WPD_ERROR_SUCCESS;
 }
 
-int
-apply_pixmap(const struct x11_context_t* x11, Imlib_Image image)
+wpd_error
+wpd_set_image_as_wallpaper(const struct x11_context_t* x11, Imlib_Image image)
 {
-	Pixmap pmap_d2;
+	Pixmap background_pixmap;
 	XGCValues gcvalues;
 	GC gc;
     struct x11_context_t* x11_temp = NULL;
     Pixmap image_pixmap;
 
-    int error;
-
-	Atom prop_root, prop_esetroot, type;
-	int format;
-	unsigned long length, after;
-	unsigned char *data_root = NULL, *data_esetroot = NULL;
-
     XColor color;
     Colormap cmap = DefaultColormap(x11->display, DefaultScreen(x11->display));
     XAllocNamedColor(x11->display, cmap, "black", &color, &color);
 
-    image_pixmap = create_pixmap_from_image(&image, x11);
-	draw_image_on_pixmap(image_pixmap, image, 0, 0, 1, 1, 0);
+    image_pixmap = wpd_create_pixmap_from_image(&image, x11);
+	wpd_draw_image_on_pixmap(image_pixmap, image, 0, 0, 1, 1, 0);
 
-    /* create new display, copy pixmap to new display */
-    error = create_x11_context(&x11_temp);
-    if (error != 0)
-    {
-        return error;
-    }
+    // Create a separate temporary context that we can dispose of when we are
+    // done
+    TRY(wpd_create_x11_context(&x11_temp));
 
     XSync(x11->display, False);
-    pmap_d2 = XCreatePixmap(x11_temp->display, x11_temp->root, x11->screen->width, x11->screen->height, x11_temp->depth);
+    background_pixmap = XCreatePixmap(x11_temp->display, x11_temp->root,
+            x11->screen->width, x11->screen->height, x11_temp->depth);
+
+    // TODO: Understand this; Create the graphics context used to copy the pixmap?
     gcvalues.fill_style = FillTiled;
     gcvalues.tile = image_pixmap;
-    gc = XCreateGC(x11_temp->display, pmap_d2, GCFillStyle | GCTile, &gcvalues);
-    XFillRectangle(x11_temp->display, pmap_d2, gc, 0, 0, x11->screen->width, x11->screen->height);
+    gc = XCreateGC(x11_temp->display, background_pixmap, GCFillStyle | GCTile,
+        &gcvalues);
+
+    // Copy the pixmap
+    XFillRectangle(x11_temp->display, background_pixmap, gc, 0, 0,
+        x11->screen->width, x11->screen->height);
+
+    // Free the graphics context
     XFreeGC(x11_temp->display, gc);
+
+    // Sync the displays
     XSync(x11_temp->display, False);
     XSync(x11->display, False);
 
-    error = update_props(x11_temp, pmap_d2);
-    if (error != 0)
-    {
-        return error;
-    }
+    // Update the root pixmap properties so Window Managers respect the updates
+    TRY(wpd_update_pixmap_properties(x11_temp, background_pixmap));
 
-    XSetWindowBackgroundPixmap(x11_temp->display, x11_temp->root, pmap_d2);
+    // Set the background pixmap of the root window
+    XSetWindowBackgroundPixmap(x11_temp->display, x11_temp->root, background_pixmap);
     XClearWindow(x11_temp->display, x11_temp->root);
     XFlush(x11_temp->display);
+
+    // Close the temporary display and retain the changes
     XSetCloseDownMode(x11_temp->display, RetainPermanent);
     XCloseDisplay(x11_temp->display);
 }
 
-int
-wpd_set_wallpaper(const struct x11_context_t* x11, const char * path)
+wpd_error
+wpd_load_image(const char * path, Imlib_Image* result)
 {
-    Pixmap image_pixmap;
     Imlib_Image image;
 
-    // Load the image from a file
     image = imlib_load_image(path);
     if (!image)
     {
@@ -247,6 +249,17 @@ wpd_set_wallpaper(const struct x11_context_t* x11, const char * path)
         return ERROR_TODO;
     }
 
-    apply_pixmap(x11, image);
+    (*result) = image;
+    return WPD_ERROR_SUCCESS;
+}
+
+wpd_error
+wpd_set_wallpaper(const struct x11_context_t* x11, const char * path)
+{
+    Imlib_Image image;
+
+    TRY(wpd_load_image(path, &image));
+
+    wpd_set_image_as_wallpaper(x11, image);
 }
 

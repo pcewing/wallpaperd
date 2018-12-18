@@ -6,95 +6,59 @@
 #include <stdbool.h>
 
 #include "enumerate.h"
-#include "util.h"
+#include "core.h"
 
 const char * file_types[] = { "jpg", "png" };
 
 /* State tracking vars */
 struct file_enumeration_t* current_result;
 
-char* 
-ftw_type_str(const int type)
-{
-    char * result;
-    switch(type)
-    {
-        case FTW_F:   result = "FTW_F";   break;
-        case FTW_D:   result = "FTW_D";   break;
-        case FTW_DNR: result = "FTW_DNR"; break;
-        case FTW_DP:  result = "FTW_DP";  break;
-        case FTW_SL:  result = "FTW_SL";  break;
-        case FTW_SLN: result = "FTW_SLN"; break;
-        case FTW_NS:  result = "FTW_NS";  break;
-        default: result = "UNDEFINED";
-    };
-    return result;
-}
-
-char*
-st_mode_str(const int st_mode)
-{
-    char * result;
-    switch (st_mode)
-    {
-        case S_IFREG:  result = "S_IFREG";  break;
-        case S_IFDIR:  result = "S_IFDIR";  break;
-        case S_IFCHR:  result = "S_IFCHR";  break;
-        case S_IFBLK:  result = "S_IFBLK";  break;
-        case S_IFLNK:  result = "S_IFLNK";  break;
-        case S_IFIFO:  result = "S_IFIFO";  break;
-        case S_IFSOCK: result = "S_IFSOCK"; break;
-        default: result = "UNDEFINED";
-    };
-    return result;
-}
-
-ftw_error_t
+wpd_error
 create_file_enumeration_node(const char * path, struct file_enumeration_node_t** out)
 {
     (*out) = malloc(sizeof(struct file_enumeration_node_t));
     (*out)->m_path = strdup(path);
 
-    char *filename = getfilename(path);
+    char *filename = wpd_get_filename(path);
     if (!filename)
     {
-        return FILE_ENUMERATION_ERROR_UNKNOWN_FILENAME;
+        return WPD_ERROR_UNKNOWN_FILENAME;
     }
 
     (*out)->m_file = strdup(filename);
 
-    char *extension = getextension(filename);
+    char *extension = wpd_get_extension(filename);
     if (!extension)
     {
-        return FILE_ENUMERATION_ERROR_UNKNOWN_EXTENSION;
+        return WPD_ERROR_UNKNOWN_EXTENSION;
     }
 
     (*out)->m_ext = strdup(extension);
 
-    return FILE_ENUMERATION_SUCCESS;
+    return WPD_ERROR_SUCCESS;
 }
 
-ftw_error_t
+wpd_error
 add_file_enumeration_node(struct file_enumeration_node_t* node)
 {
     if (!node)
     {
-        return FILE_ENUMERATION_ERROR_NULL_PARAM;
+        return WPD_ERROR_NULL_PARAM;
     }
 
     current_result->nodes[current_result->node_count] = node;
     ++current_result->node_count;
 
-    return FILE_ENUMERATION_SUCCESS;
+    return WPD_ERROR_SUCCESS;
 }
 
-ftw_error_t
+wpd_error
 iterate_file_enumeration(const struct file_enumeration_t* enumeration,
     void (*f) (const struct file_enumeration_node_t* node))
 {
     if (!f)
     {
-        return FILE_ENUMERATION_ERROR_NULL_PARAM;
+        return WPD_ERROR_NULL_PARAM;
     }
 
     for (size_t i = 0; i < enumeration->node_count; ++i)
@@ -102,15 +66,15 @@ iterate_file_enumeration(const struct file_enumeration_t* enumeration,
         f(enumeration->nodes[i]);
     }
 
-    return FILE_ENUMERATION_SUCCESS;
+    return WPD_ERROR_SUCCESS;
 }
 
-ftw_error_t
+wpd_error
 free_file_enumeration_node(struct file_enumeration_node_t** node)
 {
     if (!node)
     {
-        return FILE_ENUMERATION_ERROR_NULL_PARAM;
+        return WPD_ERROR_NULL_PARAM;
     }
 
     if ((*node)->m_path) free((void*)(*node)->m_path);
@@ -120,15 +84,15 @@ free_file_enumeration_node(struct file_enumeration_node_t** node)
     free(*node);
     node = NULL;
 
-    return FILE_ENUMERATION_SUCCESS;
+    return WPD_ERROR_SUCCESS;
 }
 
-ftw_error_t
+wpd_error
 free_enumeration(struct file_enumeration_t** enumeration)
 {
     if (!enumeration)
     {
-        return FILE_ENUMERATION_ERROR_NULL_PARAM;
+        return WPD_ERROR_NULL_PARAM;
     }
 
     for (size_t i = 0; i < (*enumeration)->node_count; ++i)
@@ -139,14 +103,14 @@ free_enumeration(struct file_enumeration_t** enumeration)
     free((void*)(*enumeration));
     enumeration = NULL;
 
-    return FILE_ENUMERATION_SUCCESS;
+    return WPD_ERROR_SUCCESS;
 }
 
 void
 process_node(const char * path)
 {
     struct file_enumeration_node_t* node = NULL;
-    if (create_file_enumeration_node(path, &node) != FILE_ENUMERATION_SUCCESS)
+    if (create_file_enumeration_node(path, &node) != WPD_ERROR_SUCCESS)
     {
         return;
     }
@@ -184,7 +148,7 @@ nftw_handler(const char *pathname, const struct stat *sbuf, int type, struct FTW
     return 0;
 }
 
-ftw_error_t
+wpd_error
 enumerate_files(const char * path, struct file_enumeration_t** result)
 {
     current_result = malloc(sizeof(struct file_enumeration_t));
@@ -192,12 +156,12 @@ enumerate_files(const char * path, struct file_enumeration_t** result)
     if (nftw(path, nftw_handler, 10, 0) == -1)
     {
         /* TODO: Free the result */
-        return FILE_ENUMERATION_ERROR_TODO;
+        return WPD_ERROR_TODO;
     }
 
     (*result) = current_result;
     current_result = NULL;
 
-    return FILE_ENUMERATION_SUCCESS;
+    return WPD_ERROR_SUCCESS;
 }
 
