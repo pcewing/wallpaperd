@@ -73,6 +73,12 @@ wpd_free_image(struct wpd_image_t** image)
 wpd_error
 wpd_set_wallpaper(const struct x11_context_t* x11, const char * path)
 {
+    /* 
+     * TODO:
+     * Using the xcb randr library, get each physical display, then load an
+     * image and set the background for each display.
+     */
+
     xcb_connection_t *connection = xcb_connect (NULL, NULL);
     const xcb_setup_t *setup = xcb_get_setup(connection);
 
