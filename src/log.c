@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#define LOGLEVEL LOGLEVEL_INFO
+
 const char*
 log_level_str(const log_level_t level)
 {
@@ -21,6 +23,11 @@ log_level_str(const log_level_t level)
 
 void LOG(const log_level_t level, const char* format, ...)
 {
+    if (level < LOGLEVEL)
+    {
+        return;
+    }
+
     struct timespec tp;
     clock_gettime(CLOCK_REALTIME, &tp);
 

@@ -7,9 +7,9 @@
 
 struct file_enumeration_node_t
 {
-    char* m_path;
-    char* m_file;
-    char* m_ext;
+    char* path;
+    char* file;
+    char* ext;
 };
 
 struct file_enumeration_t
@@ -18,18 +18,20 @@ struct file_enumeration_t
     size_t node_count;
 };
 
-// Public interface
+/**
+ * TODO: Document this.
+ **/
+wpd_error_t
+create_file_enumeration(
+    const char                 *path,
+    struct file_enumeration_t **result);
 
-//
-wpd_error
-enumerate_files(const char * path, struct file_enumeration_t** result);
+/**
+ * TODO: Document this.
+ **/
+wpd_error_t
+destroy_file_enumeration(
+    struct file_enumeration_t** enumeration);
 
-wpd_error
-iterate_file_enumeration(const struct file_enumeration_t* enumeration,
-    void (*f) (const struct file_enumeration_node_t* node));
-
-wpd_error
-free_enumeration(struct file_enumeration_t** enumeration);
-
-#endif
+#endif // ENUMERATE_H
 
