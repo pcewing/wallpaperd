@@ -11,13 +11,19 @@ wpd_main_loop(const char *search_path)
 
     while (1)
     {
-        struct file_enumeration_t* file_enumeration = NULL;
+        struct wpd_file_enumeration_t* file_enumeration = NULL;
+        struct wpd_image_metadata_array_t* image_metadata_array = NULL;
 
-        TRY(create_file_enumeration(search_path, &file_enumeration));
+        // Enumerate image files
+        TRY(wpd_create_file_enumeration(search_path, &file_enumeration));
 
-        wpd_set_wallpapers(file_enumeration);
+        // Get metadata about the image files (I.E. Dimensions)
+        TRY(wpd_create_image_metadata_array(file_enumeration, &image_metadata_array));
 
-        destroy_file_enumeration(&file_enumeration);
+        TRY(wpd_set_wallpapers(image_metadata_array));
+
+        TRY(wpd_destroy_image_metadata_array(&image_metadata_array));
+        TRY(wpd_destroy_file_enumeration(&file_enumeration));
 
         if (wpd_sleep(2) != 0)
         {

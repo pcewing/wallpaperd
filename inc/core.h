@@ -14,6 +14,7 @@ typedef int wpd_error_t;
 #define WPD_ERROR_UNKNOWN_EXTENSION 0x0003
 #define WPD_ERROR_NULL_PARAM 0x0004
 #define WPD_ERROR_TODO 0x0005
+#define WPD_ERROR_NO_COMPATIBLE_IMAGE 0x0006
 
 #define TRY(statement) { \
         wpd_error_t wpd__error; \

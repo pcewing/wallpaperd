@@ -5,16 +5,16 @@
 
 #define MAX_NODES 1024
 
-struct file_enumeration_node_t
+struct wpd_file_enumeration_node_t
 {
     char* path;
     char* file;
     char* ext;
 };
 
-struct file_enumeration_t
+struct wpd_file_enumeration_t
 {
-    struct file_enumeration_node_t* nodes[MAX_NODES];
+    struct wpd_file_enumeration_node_t* nodes[MAX_NODES];
     size_t node_count;
 };
 
@@ -22,16 +22,16 @@ struct file_enumeration_t
  * TODO: Document this.
  **/
 wpd_error_t
-create_file_enumeration(
+wpd_create_file_enumeration(
     const char                 *path,
-    struct file_enumeration_t **result);
+    struct wpd_file_enumeration_t **result);
 
 /**
  * TODO: Document this.
  **/
 wpd_error_t
-destroy_file_enumeration(
-    struct file_enumeration_t** enumeration);
+wpd_destroy_file_enumeration(
+    struct wpd_file_enumeration_t** enumeration);
 
 #endif // ENUMERATE_H
 

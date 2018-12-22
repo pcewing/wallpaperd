@@ -13,16 +13,16 @@
 const char * file_types[] = { "jpg", "png" };
 
 // TODO: Don't use ftw which forces the usage of a global variable like this
-struct file_enumeration_t* current_result;
+struct wpd_file_enumeration_t* current_result;
 
 wpd_error_t
-create_file_enumeration_node(const char * path, struct file_enumeration_node_t** out)
+wpd_create_file_enumeration_node(const char * path, struct wpd_file_enumeration_node_t** out)
 {
-    struct file_enumeration_node_t  *result;
+    struct wpd_file_enumeration_node_t  *result;
     char                            *filename;
     char                            *extension;
 
-    result = malloc(sizeof(struct file_enumeration_node_t));
+    result = malloc(sizeof(struct wpd_file_enumeration_node_t));
     result->path = strdup(path);
 
     filename = wpd_get_filename(path);
@@ -46,7 +46,7 @@ create_file_enumeration_node(const char * path, struct file_enumeration_node_t**
 }
 
 wpd_error_t
-add_file_enumeration_node(struct file_enumeration_node_t* node)
+wpd_add_file_enumeration_node(struct wpd_file_enumeration_node_t* node)
 {
     if (!node)
     {
@@ -60,25 +60,23 @@ add_file_enumeration_node(struct file_enumeration_node_t* node)
 }
 
 wpd_error_t
-free_file_enumeration_node(struct file_enumeration_node_t** node)
+wpd_destroy_file_enumeration_node(struct wpd_file_enumeration_node_t** node)
 {
-    if (!node)
+    if (!node || !(*node))
     {
         return WPD_ERROR_NULL_PARAM;
     }
 
-    if ((*node)->path) free((void*)(*node)->path);
-    if ((*node)->file) free((void*)(*node)->file);
-    if ((*node)->ext) free((void*)(*node)->ext);
-
-    free(*node);
-    node = NULL;
+    FREE((*node)->path);
+    FREE((*node)->file);
+    FREE((*node)->ext);
+    FREE(*node);
 
     return WPD_ERROR_SUCCESS;
 }
 
 wpd_error_t
-destroy_file_enumeration(struct file_enumeration_t** enumeration)
+wpd_destroy_file_enumeration(struct wpd_file_enumeration_t** enumeration)
 {
     if (!enumeration)
     {
@@ -87,20 +85,19 @@ destroy_file_enumeration(struct file_enumeration_t** enumeration)
 
     for (size_t i = 0; i < (*enumeration)->node_count; ++i)
     {
-        free_file_enumeration_node(&(*enumeration)->nodes[i]);
+        TRY(wpd_destroy_file_enumeration_node(&(*enumeration)->nodes[i]));
     }
 
-    free((void*)(*enumeration));
-    enumeration = NULL;
+    FREE(*enumeration);
 
     return WPD_ERROR_SUCCESS;
 }
 
 void
-process_node(const char * path)
+wpd_process_node(const char * path)
 {
-    struct file_enumeration_node_t* node = NULL;
-    if (create_file_enumeration_node(path, &node) != WPD_ERROR_SUCCESS)
+    struct wpd_file_enumeration_node_t* node = NULL;
+    if (wpd_create_file_enumeration_node(path, &node) != WPD_ERROR_SUCCESS)
     {
         return;
     }
@@ -117,13 +114,13 @@ process_node(const char * path)
 
     if (supported_file_type)
     {
-        add_file_enumeration_node(node);
+        wpd_add_file_enumeration_node(node);
     }
 }
 
 
 static int
-nftw_handler(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftwb)
+wpd_nftw_handler(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftwb)
 {
     UNUSED(ftwb);
 
@@ -133,17 +130,17 @@ nftw_handler(const char *pathname, const struct stat *sbuf, int type, struct FTW
         return 0;
     }
 
-    process_node(pathname);
+    wpd_process_node(pathname);
 
     return 0;
 }
 
 wpd_error_t
-create_file_enumeration(const char * path, struct file_enumeration_t** result)
+wpd_create_file_enumeration(const char * path, struct wpd_file_enumeration_t** result)
 {
-    current_result = malloc(sizeof(struct file_enumeration_t));
+    current_result = malloc(sizeof(struct wpd_file_enumeration_t));
 
-    if (nftw(path, nftw_handler, 10, 0) == -1)
+    if (nftw(path, wpd_nftw_handler, 10, 0) == -1)
     {
         /* TODO: Free the result */
         return WPD_ERROR_TODO;

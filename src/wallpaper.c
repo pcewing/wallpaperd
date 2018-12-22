@@ -1,82 +1,19 @@
 #include "wallpaper.h"
 #include "core.h"
 #include "log.h"
+#include "image.h"
 
 // TODO: Get rid of this dependency; we should only print in log.h
 #include <stdio.h>
 
 #include <string.h>
+#include <stdbool.h>
 
 #include <xcb/xcb.h>
-
-#define PREFERRED_BYTE_DEPTH 4
+#include <xcb/xcb_image.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
-/*
-struct wpd_image_t
-{
-    wpd_image_metadata* metadata;
-    unsigned char* data;
-};
-*/
-
-struct wpd_image_metadata_t
-{
-    int width;
-    int height;
-    int comp;
-    unsigned char *path;
-};
-
-struct wpd_image_metadata_array_t
-{
-    int count;
-    struct wpd_image_metadata_t **data;
-};
-
-struct wpd_image_t
-{
-    int x;
-    int y;
-    unsigned char *data;
-};
-
-wpd_error_t
-wpd_load_image(const char* path, struct wpd_image_t** result)
-{
-    int x, y, n;
-    unsigned char *data = stbi_load(path, &x, &y, &n, PREFERRED_BYTE_DEPTH);
-    if (!data)
-    {
-        LOGERROR("STBI_LOAD failure");
-        return WPD_ERROR_TODO;
-    }
-
-    LOGINFO("STBI_LOAD success");
-
-    (*result) = malloc(sizeof(struct wpd_image_t));
-    (*result)->x = x;
-    (*result)->y = y;
-    (*result)->data = data;
-    
-    return WPD_ERROR_SUCCESS;
-}
-
-wpd_error_t
-wpd_free_image(struct wpd_image_t** image)
-{
-    if (!image || !(*image) || !(*image)->data)
-    {
-        return WPD_ERROR_NULL_PARAM;
-    }
-
-    stbi_image_free((*image)->data);
-    free(*image);
-
-    return WPD_ERROR_SUCCESS;
-}
 
 void
 print_error(const xcb_generic_error_t *error)
@@ -113,110 +50,79 @@ print_geometry(const xcb_get_geometry_reply_t *reply)
     }
 }
 
-wpd_error_t
-get_compatible_images(const struct wpd_image_metadata_array_t *image_metadata_array, 
+bool
+is_image_compatible(
+    const struct wpd_image_metadata_t *image,
     const xcb_get_geometry_reply_t *geometry)
 {
-    int i, count;
+    LOGTRACE("Checking compatibility of image with dimensions %ux%u",
+        image->width, image->height);
 
-    // TODO: Replace this with a more robust criteria system
-    
+    if (image->width == geometry->width && image->height == geometry->height)
+    {
+        LOGINFO("Found a compatible image at \"%s\"\n",
+            image->path);
+        return true;
+    }
+
+    return false;
+}
+
+wpd_error_t
+get_compatible_image_index(
+    const struct wpd_image_metadata_array_t *image_metadata_array, 
+    const xcb_get_geometry_reply_t *geometry,
+    int *out)
+{
+    int i, count, chosen;
+    int indices[1024];
+
+    count = 0;
     for (i = 0; i < image_metadata_array->count; ++i)
     {
-        LOGTRACE("Checking compatibility of image with dimensions %ux%u",
-            image_metadata_array->data[i]->width, image_metadata_array->data[i]->height);
-
-        if (image_metadata_array->data[i]->width == geometry->width
-            && image_metadata_array->data[i]->height == geometry->height)
+        if (is_image_compatible(image_metadata_array->data[i], geometry))
         {
-            LOGINFO("Found a compatible image at \"%s\"\n",
-                image_metadata_array->data[i]->path);
+            indices[count] = i;
+            count++;
         }
     }
-}
 
-struct wpd_image_metadata_t*
-get_image_metadata(const char *filename)
-{
-    struct wpd_image_metadata_t *image_metadata;
-    int width, height, comp;
-
-    stbi_info(filename, &width, &height, &comp);
-
-    image_metadata = malloc(sizeof(struct wpd_image_metadata_t));
-    image_metadata->width = width;
-    image_metadata->height = height;
-    image_metadata->comp = comp;
-    image_metadata->path = strdup(filename);
-
-    return image_metadata;
-}
-
-wpd_error_t
-free_image_metadata(struct wpd_image_metadata_t** image_metadata)
-{
-    if (!image_metadata || !(*image_metadata))
+    if (count == 0)
     {
-        return WPD_ERROR_NULL_PARAM;
+        return WPD_ERROR_NO_COMPATIBLE_IMAGE;
     }
 
-    FREE((*image_metadata)->path);
-    FREE(*image_metadata);
-
-    return WPD_ERROR_SUCCESS;
-}
-
-struct wpd_image_metadata_array_t*
-create_image_metadata_array(const struct file_enumeration_t *enumeration)
-{
-    struct wpd_image_metadata_array_t *image_metadata_array;
-    int i;
-
-    image_metadata_array = malloc(sizeof(struct wpd_image_metadata_array_t));
-    image_metadata_array->count = enumeration->node_count;
-    image_metadata_array->data = malloc(enumeration->node_count * sizeof(struct wpd_image_metadata_t*));
-
-    for (i = 0; i < enumeration->node_count; ++i)
-    {
-        image_metadata_array->data[i] = get_image_metadata(enumeration->nodes[i]->path);
-    }
-
-    return image_metadata_array;
-}
-
-wpd_error_t
-free_image_metadata_array(struct wpd_image_metadata_array_t **image_metadata_array)
-{
-    int i;
-
-    if (!image_metadata_array || !(*image_metadata_array))
-    {
-        return WPD_ERROR_NULL_PARAM;
-    }
-
-    for (i = 0; i < (*image_metadata_array)->count; ++i)
-    {
-        free_image_metadata(&((*image_metadata_array)->data[i]));
-    }
-
-    FREE((*image_metadata_array)->data);
-    FREE(*image_metadata_array);
-
+    (*out) = indices[wpd_rand() % count];
     return WPD_ERROR_SUCCESS;
 }
 
 wpd_error_t
-wpd_set_wallpapers(const struct file_enumeration_t *enumeration)
+wpd_set_wallpaper(const struct wpd_image_metadata_t *image_metadata)
+{
+    int width,
+        height,
+        comp;
+    unsigned char *data;
+    
+    data = stbi_load(image_metadata->path, &width, &height, &comp, 0);
+    if (!data)
+    {
+        return WPD_ERROR_TODO;
+    }
+
+    // TODO: Create an xcb_image_t, draw it to a pixmap, then swap out the root
+    // pixmap properties
+}
+
+wpd_error_t
+wpd_set_wallpapers(const struct wpd_image_metadata_array_t *image_metadata_array)
 {
     xcb_connection_t *connection;
     const xcb_setup_t *setup;
     xcb_screen_iterator_t screen_iterator;
-    struct wpd_image_metadata_array_t *image_metadata_array;
         
     connection = xcb_connect (NULL, NULL);
     setup = xcb_get_setup(connection);
-
-    image_metadata_array = create_image_metadata_array(enumeration);
 
     screen_iterator = xcb_setup_roots_iterator(setup);  
     while (screen_iterator.rem) {
@@ -240,16 +146,16 @@ wpd_set_wallpapers(const struct file_enumeration_t *enumeration)
         print_geometry(reply);
 
         // Get compatible images
-        get_compatible_images(image_metadata_array, reply);
+        int index;
+        TRY(get_compatible_image_index(image_metadata_array, reply, &index));
+        //wpd_set_wallpaper(image_metadata_array->data[index]);
 
         free(reply);
 
-        xcb_screen_next (&screen_iterator);
+        xcb_screen_next(&screen_iterator);
     }
 
-    free_image_metadata_array(&image_metadata_array);
-
-    xcb_disconnect (connection);
+    xcb_disconnect(connection);
 
     return WPD_ERROR_SUCCESS;
 }
