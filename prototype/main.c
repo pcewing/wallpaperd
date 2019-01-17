@@ -21,7 +21,7 @@
 
 struct image_t
 {
-    int width, height, comp;
+    int width, height, comp, req_comp;
     unsigned char *data;
     char *filename;
 };
@@ -33,10 +33,50 @@ struct geometry_t
     uint8_t depth;
 };
 
+/*
+ * Rewrite this; it's taken from:
+ * http://vincentsanders.blogspot.com/2010/04/xcb-programming-is-hard.html
+ */
+static xcb_format_t*
+find_format (xcb_connection_t *c, uint8_t depth, uint8_t bpp)
+{
+    const xcb_setup_t *setup = xcb_get_setup(c);
+    xcb_format_t *fmt = xcb_setup_pixmap_formats(setup);
+    xcb_format_t *fmtend = fmt + xcb_setup_pixmap_formats_length(setup);
+    for(; fmt != fmtend; ++fmt)
+    {
+        if((fmt->depth == depth) && (fmt->bits_per_pixel == bpp))
+        {
+            return fmt;
+        }
+    }
+    return 0;
+}
+
+void
+fillimage(unsigned char *p, int width, int height, const struct image_t* image)
+{
+    int i;
+    unsigned char *image_data_itr;
+
+    image_data_itr = image->data;
+    for (i=0; i < width * height; ++i)
+    {
+        p[0] = image_data_itr[2]; // blue
+        p[1] = image_data_itr[1]; // green
+        p[2] = image_data_itr[0]; // red
+
+        p += 4;
+        image_data_itr += 4;
+    }
+}
+
 xcb_image_t*
 create_xcb_image(
+    xcb_connection_t *connection,
     const xcb_setup_t *setup,
-    struct geometry_t *geometry)
+    struct geometry_t *geometry,
+    const struct image_t *img)
 {
     assert(setup);
     assert(geometry);
@@ -46,26 +86,40 @@ create_xcb_image(
     uint8_t                          byte_depth;
     int                              i,
                                      byte_count;
+    xcb_format_t                    *format;
+
     byte_depth = geometry->depth / 8;
     assert(byte_depth == 3);
 
-    byte_count = (geometry->width * geometry->height * byte_depth);
+    uint8_t bpp = 32;
+    byte_count = (geometry->width * geometry->height * bpp);
+    //byte_count = (geometry->width * geometry->height * byte_depth);
     data = malloc(byte_count);
 
-    for (i = 0; i < byte_count; i += byte_depth)
+    format = find_format(connection, geometry->depth, bpp);
+
+    if (0)
     {
-        data[i]   = 0xff;
-        data[i+1] = 0x00;
-        data[i+2] = 0xff;
+        for (i = 0; i < byte_count; i += byte_depth)
+        {
+            data[i]   = 0xff;
+            data[i+1] = 0x00;
+            data[i+2] = 0x00;
+            data[i+3] = 0x00;
+        }
+    }
+    else
+    {
+        fillimage(data, geometry->width, geometry->height, img);
     }
 
     image = xcb_image_create(
         geometry->width,
         geometry->height,
         XCB_IMAGE_FORMAT_Z_PIXMAP,
-        0,
-        geometry->depth,
-        geometry->depth,
+        format->scanline_pad,
+        format->depth,
+        format->bits_per_pixel,
         0,
         setup->image_byte_order,
         XCB_IMAGE_ORDER_MSB_FIRST,
@@ -210,8 +264,6 @@ set_window_background_pixmap(
 int
 set_wallpaper_from_image(const struct image_t *image)
 {
-    UNUSED(image);
-
     xcb_connection_t                *connection;
     const xcb_setup_t               *setup;
     xcb_screen_iterator_t            screen_iterator;
@@ -230,7 +282,7 @@ set_wallpaper_from_image(const struct image_t *image)
     geometry = get_geometry(connection, root);
     assert(geometry);
 
-    xcb_image = create_xcb_image(setup, geometry);
+    xcb_image = create_xcb_image(connection, setup, geometry, image);
     assert(xcb_image);
 
     pixmap = put_image_on_pixmap(connection, screen, root, xcb_image);
@@ -254,11 +306,14 @@ set_wallpaper_from_image(const struct image_t *image)
 struct image_t*
 load_image(const char *filename)
 {
-    int width, height, comp;
+    int width,
+        height,
+        comp,
+        req_comp = 4;
     unsigned char *data;
     struct image_t* image;
 
-    data = stbi_load(filename, &width, &height, &comp, 0);
+    data = stbi_load(filename, &width, &height, &comp, req_comp);
     if (!data)
     {
         return NULL;
@@ -269,6 +324,7 @@ load_image(const char *filename)
     image->width = width;
     image->height = height;
     image->comp = comp;
+    image->req_comp = req_comp;
     image->data = data;
 
     return image;
@@ -294,7 +350,7 @@ int main(int argc, char **argv)
 
     filename = (argc > 1)
         ? argv[1]
-        : "./Imperius.jpg";
+        : "../wallpapers/2560x1440/img1.jpg";
 
     image = load_image(filename);
     if (!image)
