@@ -4,14 +4,17 @@
 
 #include <stdlib.h>
 
-#define PREFERRED_BYTE_DEPTH 4
+#define BYTES_PER_PIXEL 4
 
 //------------------------------------------------------------------------------
 wpd_error_t
 wpd_create_image(const char* path, struct wpd_image_t** result)
 {
     int x, y, n;
-    unsigned char *data = stbi_load(path, &x, &y, &n, PREFERRED_BYTE_DEPTH);
+    unsigned char *data;
+    struct wpd_image_t* image;
+    
+    data = stbi_load(path, &x, &y, &n, BYTES_PER_PIXEL);
     if (!data)
     {
         LOGERROR("STBI_LOAD failure");
@@ -20,11 +23,14 @@ wpd_create_image(const char* path, struct wpd_image_t** result)
 
     LOGINFO("STBI_LOAD success");
 
-    (*result) = malloc(sizeof(struct wpd_image_t));
-    (*result)->x = x;
-    (*result)->y = y;
-    (*result)->data = data;
+    image = malloc(sizeof(struct wpd_image_t));
+    image->width = x;
+    image->height = y;
+    image->comp = n;
+    image->bytes_per_pixel = BYTES_PER_PIXEL;
+    image->data = data;
     
+    *result = image;
     return WPD_ERROR_SUCCESS;
 }
 
@@ -48,8 +54,8 @@ wpd_destroy_image(struct wpd_image_t** image)
 struct wpd_image_metadata_t*
 wpd_create_image_metadata(const char *filename)
 {
-    struct wpd_image_metadata_t *image_metadata;
     int width, height, comp;
+    struct wpd_image_metadata_t *image_metadata;
 
     stbi_info(filename, &width, &height, &comp);
 
@@ -60,6 +66,25 @@ wpd_create_image_metadata(const char *filename)
     image_metadata->path = strdup(filename);
 
     return image_metadata;
+}
+
+//------------------------------------------------------------------------------
+wpd_error_t
+wpd_get_image_metadata(
+    const char *path,
+    struct wpd_image_metadata_t **result)
+{
+    int width, height, comp;
+    struct wpd_image_metadata_t *image_metadata;
+
+    stbi_info(path, &width, &height, &comp);
+
+    image_metadata = malloc(sizeof(struct wpd_image_metadata_t));
+    image_metadata->width = width;
+    image_metadata->height = height;
+
+    *result = image_metadata;
+    return WPD_ERROR_SUCCESS;
 }
 
 //------------------------------------------------------------------------------

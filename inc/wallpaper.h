@@ -9,7 +9,7 @@
  **/
 wpd_error_t
 wpd_set_wallpapers(
-    const struct wpd_image_metadata_array_t *image_metadata_array);
+    const struct wpd_db_t *db);
 
 #endif // WALLPAPER_H
 

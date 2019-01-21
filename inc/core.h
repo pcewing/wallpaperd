@@ -16,6 +16,8 @@ typedef int wpd_error_t;
 #define WPD_ERROR_TODO 0x0005
 #define WPD_ERROR_NO_COMPATIBLE_IMAGE 0x0006
 
+#define WPD_ERROR_DATABASE_TABLE_CREATION_FAILURE 0x0007
+
 #define TRY(statement) { \
         wpd_error_t wpd__error; \
         wpd__error = statement; \

@@ -3,10 +3,10 @@
 
 Dependencies:
 ```
-MagickWand
+SQLite
 ```
 
 On Ubuntu:
 ```bash
-sudo apt-get -y install libmagickwand-dev
+sudo apt-get -y install libsqlite3-dev
 ```

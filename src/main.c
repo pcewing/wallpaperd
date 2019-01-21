@@ -1,35 +1,45 @@
 #include "core.h"
 #include "log.h"
-#include "enumerate.h"
 #include "wallpaper.h"
+#include "data.h"
+#include "ftw.h"
 
 wpd_error_t
 wpd_main_loop(const char *search_path)
 {
+    struct wpd_db_t *db;
+    wpd_error_t      error;
+
     // Seed the rng that will be used to select images
     wpd_srand();
 
+    error = initialize_database(&db);
+    if (error)
+    {
+        return error;
+    }
+
+    error = wpd_ftw(db, search_path);
+    if (error)
+    {
+        return error;
+    }
+
     while (1)
     {
-        struct wpd_file_enumeration_t* file_enumeration = NULL;
-        struct wpd_image_metadata_array_t* image_metadata_array = NULL;
-
-        // Enumerate image files
-        TRY(wpd_create_file_enumeration(search_path, &file_enumeration));
-
-        // Get metadata about the image files (I.E. Dimensions)
-        TRY(wpd_create_image_metadata_array(file_enumeration, &image_metadata_array));
-
-        TRY(wpd_set_wallpapers(image_metadata_array));
-
-        TRY(wpd_destroy_image_metadata_array(&image_metadata_array));
-        TRY(wpd_destroy_file_enumeration(&file_enumeration));
+        TRY(wpd_set_wallpapers(db));
 
         if (wpd_sleep(2) != 0)
         {
             LOGERROR("interrupted by a signal handler");
             wpd_exit(-1);
         }
+    }
+
+    error = cleanup_database(&db);
+    if (error)
+    {
+        return error;
     }
 
     return WPD_ERROR_SUCCESS;
@@ -44,7 +54,9 @@ main(int argc, char *argv[])
     wpd_error_t error;
     char *search_path;
     
-    search_path = (argc > 1) ? argv[1] : ".";
+    // TODO: Switch this back
+    //search_path = (argc > 1) ? argv[1] : ".";
+    search_path = (argc > 1) ? argv[1] : "/home/pewing/box/pic/Wallpapers";
 
     error = wpd_main_loop(search_path);
     if (error != WPD_ERROR_SUCCESS)
