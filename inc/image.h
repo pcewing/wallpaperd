@@ -5,16 +5,16 @@
 
 struct wpd_image_metadata_t
 {
-    int width;
-    int height;
+    unsigned int width;
+    unsigned int height;
 };
 
 struct wpd_image_t
 {
-    int width;
-    int height;
-    int comp;
-    int bytes_per_pixel;
+    unsigned int width;
+    unsigned int height;
+    unsigned int comp;
+    unsigned int bytes_per_pixel;
     unsigned char *data;
 };
 

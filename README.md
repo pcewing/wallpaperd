@@ -11,6 +11,7 @@ TODO: Add description
 - Make coding style consistent
 - Address missing error handling
 - Improve logging
+- Replace all instances of `WPD_ERROR_TODO` with real error codes
 
 ## Dependencies:
 ```

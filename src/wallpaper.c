@@ -63,6 +63,7 @@ select_random_wallpaper(const struct wpd_db_t *db, int width, int height,
 {
     struct wpd_wallpaper_result_set_t *wallpapers;
     wpd_error_t error;
+    unsigned int i;
     int index;
     char *image_path = NULL;
 
@@ -75,7 +76,7 @@ select_random_wallpaper(const struct wpd_db_t *db, int width, int height,
     index = rand() % wallpapers->count;
     image_path = strdup(wallpapers->results[index].path);
 
-    for (int i = 0; i < wallpapers->count; ++i)
+    for (i = 0; i < wallpapers->count; ++i)
     {
         free(wallpapers->results[i].path);
     }
@@ -113,7 +114,6 @@ wpd_get_xcb_image_band_data(
     int                       row_count,
     unsigned char            *data)
 {
-    int i;
     unsigned char *image_data_itr;
 
     int pixels_to_copy = image->width * row_count;
@@ -145,8 +145,7 @@ wpd_create_xcb_image_band(
     xcb_image_t                     *xcb_image;
     uint8_t                         *data;
     //uint8_t                          byte_depth;
-    int                              i,
-                                     byte_count;
+    int                              byte_count;
     xcb_format_t                    *format;
 
     // TODO: Why are all these numbers hard-coded?
@@ -223,6 +222,8 @@ wpd_xcb_image_put_chunked(
 
         row_index += row_count;
     }
+
+    return WPD_ERROR_SUCCESS;
 }
 
 xcb_pixmap_t
@@ -309,8 +310,6 @@ wpd_set_wallpaper(
     struct xcb_get_geometry_reply_t *geometry,
     const char                      *image_path)
 {
-    int                             width,
-                                    height;
     struct wpd_image_t             *image;
     xcb_pixmap_t                    pixmap;
     
@@ -328,6 +327,8 @@ wpd_set_wallpaper(
     xcb_flush(connection);
 
     wpd_free_image(&image);
+
+    return WPD_ERROR_SUCCESS;
 }
 
 wpd_error_t
@@ -366,6 +367,8 @@ wpd_set_wallpaper_for_screen(
         image_path);
 
     free(geometry);
+
+    return WPD_ERROR_SUCCESS;
 }
 
 wpd_error_t

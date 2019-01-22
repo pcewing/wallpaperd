@@ -11,12 +11,10 @@ LDFLAGS_XCB=`pkg-config --libs xcb`
 CFLAGS_XCB_IMAGE=`pkg-config --cflags xcb-image`
 LDFLAGS_XCB_IMAGE=`pkg-config --libs xcb-image`
 
-DEBUG_LEVEL=-g3
-
-CFLAGS_BASE=$(DEBUG_LEVEL) -Wall -Wextra -lm
+CFLAGS_BASE=-g3 -Wall -Wextra
 CFLAGS=$(CFLAGS_BASE) $(CFLAGS_XCB) $(CFLAGS_XCB_IMAGE) $(CFLAGS_SQLITE)
 
-LDFLAGS=$(LDFLAGS_XCB) $(LDFLAGS_XCB_IMAGE) $(LDFLAGS_SQLITE)
+LDFLAGS=-lm $(LDFLAGS_XCB) $(LDFLAGS_XCB_IMAGE) $(LDFLAGS_SQLITE)
 
 OBJECTS=build/core.o build/log.o build/ftw.o build/wallpaper.o build/image.o build/data.o
 
@@ -26,22 +24,22 @@ build_dir:
 	mkdir -p build
 
 log.o: build_dir
-	gcc -c -o build/log.o $(INC) -g3 $(SRC)/log.c
+	gcc -c -o build/log.o $(INC) $(CFLAGS_BASE) $(SRC)/log.c
 
 core.o: build_dir
-	gcc -c -o build/core.o $(INC) -g3 $(SRC)/core.c
+	gcc -c -o build/core.o $(INC) $(CFLAGS_BASE) $(SRC)/core.c
 
 image.o: build_dir
-	gcc -c -o build/image.o $(INC) -g3 $(SRC)/image.c
+	gcc -c -o build/image.o $(INC) $(CFLAGS_BASE) $(SRC)/image.c
 
 ftw.o: build_dir
-	gcc -c -o build/ftw.o $(INC) -g3 $(SRC)/ftw.c 
+	gcc -c -o build/ftw.o $(INC) $(CFLAGS_BASE) $(SRC)/ftw.c 
 
 wallpaper.o: build_dir
-	gcc -c -o build/wallpaper.o $(INC) -g3 $(SRC)/wallpaper.c
+	gcc -c -o build/wallpaper.o $(INC) $(CFLAGS_BASE) $(SRC)/wallpaper.c
 
 data.o: build_dir
-	gcc -c -o build/data.o $(INC) -g3 $(SRC)/data.c
+	gcc -c -o build/data.o $(INC) $(CFLAGS_BASE) $(SRC)/data.c
 
 wallpaperd: build_dir ftw.o log.o core.o wallpaper.o image.o data.o
 	cc -o build/wallpaperd $(INC) $(SRC)/main.c $(OBJECTS) $(CFLAGS) $(LDFLAGS)

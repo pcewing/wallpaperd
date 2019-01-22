@@ -9,13 +9,13 @@ struct wpd_db_t;
 struct wpd_wallpaper_entity_t
 {
     char *path;
-    int width;
-    int height;
+    unsigned int width;
+    unsigned int height;
 };
 
 struct wpd_wallpaper_result_set_t
 {
-    int count;
+    unsigned int count;
     struct wpd_wallpaper_entity_t *results;
 };
 

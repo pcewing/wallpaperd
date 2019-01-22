@@ -39,11 +39,10 @@ path_join(const char *a, const char *b)
 {
     char *result;
     size_t len;
-    int err;
 
     len = strlen(a) + strlen(PATH_SEPARATOR) + strlen(b) + 1;
     result = malloc(len);
-    err = snprintf(result, len, "%s%s%s", a, PATH_SEPARATOR, b);
+    snprintf(result, len, "%s%s%s", a, PATH_SEPARATOR, b);
 
     return result;
 }
@@ -51,7 +50,7 @@ path_join(const char *a, const char *b)
 bool
 is_extension_supported(const char *extension)
 {
-    int i;
+    unsigned int i;
 
     // TODO: Make this configurable
     const char *supported_extensions[] = { "jpg", "png" };
@@ -70,6 +69,7 @@ is_extension_supported(const char *extension)
 wpd_error_t
 process_directory(const struct wpd_db_t *db, const char *path, struct dirent *entry)
 {
+    UNUSED(entry);
 
     // Recursively walk directories
     wpd_ftw(db, path);
@@ -81,7 +81,6 @@ wpd_error_t
 process_regular_file(const struct wpd_db_t *db, const char *path, struct dirent *entry)
 {
     char         *extension;
-    unsigned int  i;
     wpd_error_t   error;
     struct wpd_image_metadata_t *image_metadata;
 
@@ -159,6 +158,8 @@ process_directory_entry(
     };
 
     free(full_path);
+
+    return WPD_ERROR_SUCCESS;
 }
 
 wpd_error_t
@@ -166,7 +167,6 @@ wpd_ftw(const struct wpd_db_t* db, const char *path)
 {
     struct dirent *entry;
     DIR           *dirp;
-    int            close_result;
     char          *full_path;
 
     full_path = malloc(PATH_MAX);
@@ -182,14 +182,14 @@ wpd_ftw(const struct wpd_db_t* db, const char *path)
         return WPD_ERROR_TODO;
     }
 
-    // TODO: Set errno to 0 first and then check for errno when entry == NULL
     while ((entry = readdir(dirp)))
     {
         process_directory_entry(db, path, entry);
     }
 
-    // TODO: Check for error
-    close_result = closedir(dirp);
+    closedir(dirp);
     free(full_path);
+
+    return WPD_ERROR_SUCCESS;
 }
 
