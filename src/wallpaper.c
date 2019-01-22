@@ -57,24 +57,6 @@ print_geometry(const xcb_get_geometry_reply_t *reply)
     }
 }
 
-bool
-is_image_compatible(
-    const struct wpd_image_metadata_t *image,
-    const xcb_get_geometry_reply_t *geometry)
-{
-    LOGTRACE("Checking compatibility of image with dimensions %ux%u",
-        image->width, image->height);
-
-    if (image->width == geometry->width && image->height == geometry->height)
-    {
-        LOGINFO("Found a compatible image at \"%s\"\n",
-            image->path);
-        return true;
-    }
-
-    return false;
-}
-
 wpd_error_t
 select_random_wallpaper(const struct wpd_db_t *db, int width, int height,
     char **result)
@@ -332,7 +314,7 @@ wpd_set_wallpaper(
     struct wpd_image_t             *image;
     xcb_pixmap_t                    pixmap;
     
-    TRY(wpd_create_image(image_path, &image));
+    TRY(wpd_get_image(image_path, &image));
     
     pixmap = wpd_put_image_on_pixmap(connection, setup, screen, screen->root,
         image);
@@ -344,6 +326,8 @@ wpd_set_wallpaper(
         geometry->width, geometry->height);
 
     xcb_flush(connection);
+
+    wpd_free_image(&image);
 }
 
 wpd_error_t

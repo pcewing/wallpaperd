@@ -2,21 +2,11 @@
 #define IMAGE_H
 
 #include "core.h"
-#include "ftw.h"
-
 
 struct wpd_image_metadata_t
 {
     int width;
     int height;
-    int comp;
-    unsigned char *path;
-};
-
-struct wpd_image_metadata_array_t
-{
-    int count;
-    struct wpd_image_metadata_t **data;
 };
 
 struct wpd_image_t
@@ -32,7 +22,7 @@ struct wpd_image_t
  * TODO: Documentation
  **/
 wpd_error_t
-wpd_create_image(
+wpd_get_image(
     const char* path,
     struct wpd_image_t** result);
 
@@ -40,15 +30,8 @@ wpd_create_image(
  * TODO: Documentation
  **/
 wpd_error_t
-wpd_destroy_image(
+wpd_free_image(
     struct wpd_image_t** image);
-
-/**
- * TODO: Documentation
- **/
-struct wpd_image_metadata_t*
-wpd_create_image_metadata(
-    const char *filename);
 
 /**
  * TODO: Documentation
@@ -62,22 +45,7 @@ wpd_get_image_metadata(
  * TODO: Documentation
  **/
 wpd_error_t
-wpd_destroy_image_metadata(
+wpd_free_image_metadata(
     struct wpd_image_metadata_t** image_metadata);
-
-/**
- * TODO: Documentation
- **/
-wpd_error_t
-wpd_create_image_metadata_array(
-    const struct wpd_file_enumeration_t *enumeration,
-    struct wpd_image_metadata_array_t** out);
-
-/**
- * TODO: Documentation
- **/
-wpd_error_t
-wpd_destroy_image_metadata_array(
-    struct wpd_image_metadata_array_t **image_metadata_array);
 
 #endif // IMAGE_H

@@ -105,7 +105,8 @@ process_regular_file(const struct wpd_db_t *db, const char *path, struct dirent 
 
         // Insert the entity into the DB
         insert_wallpaper(db, &wallpaper);
-        free(image_metadata);
+
+        wpd_free_image_metadata(&image_metadata);
     }
 
     return WPD_ERROR_SUCCESS;

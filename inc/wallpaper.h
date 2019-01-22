@@ -2,7 +2,7 @@
 #define WALLPAPER_H
 
 #include "core.h"
-#include "image.h"
+#include "data.h"
 
 /**
  * TODO: Document what this function does

@@ -19,23 +19,35 @@ struct wpd_wallpaper_result_set_t
     struct wpd_wallpaper_entity_t *results;
 };
 
+// TODO: Document this
 wpd_error_t
-initialize_database(struct wpd_db_t** db);
+initialize_database(
+    struct wpd_db_t** db);
 
+// TODO: Document this
 wpd_error_t
-insert_wallpaper(const struct wpd_db_t *db,
+insert_wallpaper
+    const struct wpd_db_t *db,
     const struct wpd_wallpaper_entity_t *wallpaper);
 
+// TODO: Document this
 wpd_error_t
-get_wallpapers(const struct wpd_db_t *db,
-       struct wpd_wallpaper_result_set_t **result_set);
+get_wallpapers
+    const struct wpd_db_t *db,
+    struct wpd_wallpaper_result_set_t **result_set);
 
+// TODO: Document this
 wpd_error_t
-get_wallpapers_by_dimensions(const struct wpd_db_t *db, int width, int height,
-       struct wpd_wallpaper_result_set_t **result_set);
+get_wallpapers_by_dimensions(
+    const struct wpd_db_t *db,
+    int width,
+    int height,
+    struct wpd_wallpaper_result_set_t **result_set);
 
+// TODO: Document this
 wpd_error_t
-cleanup_database(struct wpd_db_t** db);
+cleanup_database(
+        struct wpd_db_t** db);
 
 #endif // DATA_H
 
