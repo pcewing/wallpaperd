@@ -26,13 +26,13 @@ initialize_database(
 
 // TODO: Document this
 wpd_error_t
-insert_wallpaper
+insert_wallpaper(
     const struct wpd_db_t *db,
     const struct wpd_wallpaper_entity_t *wallpaper);
 
 // TODO: Document this
 wpd_error_t
-get_wallpapers
+get_wallpapers(
     const struct wpd_db_t *db,
     struct wpd_wallpaper_result_set_t **result_set);
 
