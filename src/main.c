@@ -1,42 +1,33 @@
 #include "core.h"
 #include "log.h"
-#include "enumerate.h"
 #include "wallpaper.h"
+#include "data.h"
+#include "ftw.h"
 
-wpd_error
-wpd_initialize(struct x11_context_t** x11)
+wpd_error_t
+wpd_main_loop(const char *search_path)
 {
+    struct wpd_db_t *db;
+    wpd_error_t      error;
+
+    // Seed the rng that will be used to select images
     wpd_srand();
 
-    TRY(wpd_create_x11_context(x11));
+    error = initialize_database(&db);
+    if (error)
+    {
+        return error;
+    }
 
-    wpd_initialize_libs(*x11);
-
-    return WPD_ERROR_SUCCESS;
-}
-
-wpd_error
-wpd_cleanup(struct x11_context_t** x11)
-{
-    TRY(wpd_destroy_x11_context(x11));
-
-    return WPD_ERROR_SUCCESS;
-}
-
-wpd_error
-wpd_main_loop(const struct file_enumeration_t* enumeration)
-{
-    static struct x11_context_t* x11 = NULL;
-
-    TRY(wpd_initialize(&x11));
+    error = wpd_ftw(db, search_path);
+    if (error)
+    {
+        return error;
+    }
 
     while (1)
     {
-        int index = wpd_rand() % enumeration->node_count;
-
-        LOGINFO("Setting wallpaper to %s", enumeration->nodes[index]->m_path);
-
-        wpd_set_wallpaper(x11, enumeration->nodes[index]->m_path);
+        TRY(wpd_set_wallpapers(db));
 
         if (wpd_sleep(2) != 0)
         {
@@ -45,23 +36,11 @@ wpd_main_loop(const struct file_enumeration_t* enumeration)
         }
     }
 
-    TRY(wpd_cleanup(&x11));
-
-    return WPD_ERROR_SUCCESS;
-}
-
-wpd_error
-wpd_main(const char * path)
-{
-    struct file_enumeration_t* enumeration = NULL;
-
-    TRY(enumerate_files(path, &enumeration));
-
-    LOGINFO("Found %i wallpaper files!", enumeration->node_count);
-
-    TRY(wpd_main_loop(enumeration));
-
-    free_enumeration(&enumeration);
+    error = cleanup_database(&db);
+    if (error)
+    {
+        return error;
+    }
 
     return WPD_ERROR_SUCCESS;
 }
@@ -71,11 +50,15 @@ main(int argc, char *argv[])
 {
     UNUSED(argc);
     UNUSED(argv);
-    wpd_error error;
 
-    char* path = (argc > 1) ? argv[1] : ".";
+    wpd_error_t error;
+    char *search_path;
+    
+    // TODO: Switch this back
+    //search_path = (argc > 1) ? argv[1] : ".";
+    search_path = (argc > 1) ? argv[1] : "/home/pewing/box/pic/Wallpapers";
 
-    error = wpd_main(path);
+    error = wpd_main_loop(search_path);
     if (error != WPD_ERROR_SUCCESS)
     {
         LOGERROR("Unhandled error encountered: %s\n", wpd_error_str(error));

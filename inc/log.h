@@ -19,4 +19,5 @@ void LOG(const log_level_t level, const char* message, ...);
 #define LOGWARN(message, args...) LOG(LOGLEVEL_WARN, message, ## args)
 #define LOGERROR(message, args...) LOG(LOGLEVEL_ERROR, message, ## args)
 
-#endif
+#endif // LOG_H
+

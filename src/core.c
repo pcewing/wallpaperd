@@ -20,7 +20,7 @@ void wpd_exit(int exit_code)
 }
 
 const char*
-wpd_error_str(wpd_error error)
+wpd_error_str(wpd_error_t error)
 {
     return error_strings[error];
 }
