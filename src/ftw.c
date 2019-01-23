@@ -170,17 +170,10 @@ wpd_ftw(const struct wpd_db_t* db, const char *path)
     char          *full_path;
 
     full_path = malloc(PATH_MAX);
-    if (!realpath(path, full_path))
-    {
-        free(full_path);
-        return WPD_ERROR_TODO;
-    }
+    assert(realpath(path, full_path));
 
-    if (!(dirp = opendir(full_path)))
-    {
-        free(full_path);
-        return WPD_ERROR_TODO;
-    }
+    dirp = opendir(full_path);
+    assert(dirp);
 
     while ((entry = readdir(dirp)))
     {

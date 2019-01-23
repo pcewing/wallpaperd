@@ -25,35 +25,17 @@ wpd_error_str(wpd_error_t error)
     return error_strings[error];
 }
 
-void wpd_die(const char * message)
-{
-    printf("%s\n", message);
-    exit(1);
-}
-
 char*
-getafter(const char *str, const char c)
+wpd_get_extension(const char *filename)
 {
     char *temp, *result = NULL;
 
-    temp = strrchr(str, c);
+    temp = strrchr(filename, '.');
     if (temp) {
         result = temp + 1;
     }
 
     return result;
-}
-
-char*
-wpd_get_filename(const char *pathname)
-{
-    return getafter(pathname, '/');
-}
-
-char*
-wpd_get_extension(const char *filename)
-{
-    return getafter(filename, '.');
 }
 
 unsigned int

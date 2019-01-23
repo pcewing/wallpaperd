@@ -37,9 +37,6 @@ typedef int wpd_error_t;
 void
 wpd_exit(int exit_code);
 
-void
-wpd_die(const char * message);
-
 const char*
 wpd_error_str(wpd_error_t error);
 

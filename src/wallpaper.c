@@ -73,7 +73,7 @@ select_random_wallpaper(const struct wpd_db_t *db, int width, int height,
         return error;
     }
 
-    index = rand() % wallpapers->count;
+    index = wpd_rand() % wallpapers->count;
     image_path = strdup(wallpapers->results[index].path);
 
     for (i = 0; i < wallpapers->count; ++i)
@@ -192,7 +192,6 @@ wpd_xcb_image_put_chunked(
     xcb_gcontext_t           gcontext,
     struct wpd_image_t      *image)
 {
-    xcb_image_t *xcb_image;
     uint32_t     max_request_length_bytes,
                  bytes_per_row,
                  rows_per_request,
@@ -211,6 +210,8 @@ wpd_xcb_image_put_chunked(
     row_index = 0;
     while (row_index < image->height)
     {
+        xcb_image_t *xcb_image;
+
         uint32_t rows_remaining = image->height - row_index;
         uint32_t row_count = wpd_min(rows_per_request, rows_remaining);
 
@@ -314,6 +315,8 @@ wpd_set_wallpaper(
     xcb_pixmap_t                    pixmap;
     
     TRY(wpd_get_image(image_path, &image));
+
+    LOGINFO("Setting wallpaper to %s\n", image_path);
     
     pixmap = wpd_put_image_on_pixmap(connection, setup, screen, screen->root,
         image);
@@ -340,7 +343,7 @@ wpd_set_wallpaper_for_screen(
 {
     xcb_get_geometry_cookie_t    cookie;
     xcb_generic_error_t         *error = NULL;
-    xcb_get_geometry_reply_t    *geometry = NULL;
+    xcb_get_geometry_reply_t    *geometry;
     xcb_window_t                 root_window;
     char                        *image_path = NULL;
 
