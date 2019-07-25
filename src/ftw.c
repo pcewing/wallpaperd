@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 #include "core.h"
+#include "log.h"
 #include "ftw.h"
 #include "image.h"
 
@@ -126,17 +127,14 @@ process_directory_entry(
     }
 
     full_path = path_join(parent_dir, entry->d_name);
-    printf("%s %s\n", type_str(entry->d_type), full_path);
+    //LOGDEBUG("%s %s", type_str(entry->d_type), full_path);
 
 #define WPD_FTW_CASE_NOOP(TYPE) case TYPE: break;
 #define WPD_FTW_CASE(TYPE, PROCESSOR) \
     case TYPE: \
     { \
         wpd_error_t error = PROCESSOR(db, full_path, entry); \
-        if (error != WPD_ERROR_SUCCESS) \
-        { \
-            return error; \
-        } \
+        if (error != WPD_ERROR_SUCCESS) { return error; } \
         break; \
     }
     

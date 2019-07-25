@@ -1,5 +1,4 @@
 #include "wallpaper.h"
-#include "core.h"
 #include "log.h"
 #include "image.h"
 
@@ -16,25 +15,28 @@
 #include "stb_image.h"
 
 
-uint32_t
-wpd_min(uint32_t a, uint32_t b)
-{
-    return (a < b) ? a : b;
-}
-
 void
 print_error(const xcb_generic_error_t *error)
 {
     if (error)
     {
-        printf("Error:\n");
-        printf("(uint8_t) response_type: %u\n", error->response_type);
-        printf("(uint8_t) error_code: %u\n", error->error_code);
-        printf("(uint16_t) sequence: %u\n", error->sequence);
-        printf("(uint32_t) resource_id: %u\n", error->resource_id);
-        printf("(uint16_t) minor_code: %u\n", error->minor_code);
-        printf("(uint8_t) major_code: %u\n", error->major_code);
-        printf("(uint32_t) full_sequence: %u\n\n", error->full_sequence);
+        printf(
+            "xcb_generic_error_t = {\n"
+            "  \"response_type\": %u,\n"
+            "  \"error_code\": %u,\n"
+            "  \"sequence\": %u,\n"
+            "  \"resource_id\": %u,\n"
+            "  \"minor_code\": %u,\n"
+            "  \"major_code\": %u,\n"
+            "  \"full_sequence\": %u,\n"
+            "}\n",
+            error->response_type,
+            error->error_code,
+            error->sequence,
+            error->resource_id,
+            error->minor_code,
+            error->major_code,
+            error->full_sequence);
     }
 }
 
@@ -43,17 +45,29 @@ print_geometry(const xcb_get_geometry_reply_t *reply)
 {
     if (reply)
     {
-        printf("Geometry:\n");
-        printf("(uint8_t) response_type: %u\n", reply->response_type);
-        printf("(uint8_t) depth: %u\n", reply->depth);
-        printf("(uint16_t) sequence: %u\n", reply->sequence);
-        printf("(uint32_t) length: %u\n", reply->length);
-        printf("(xcb_window_t) root: %u\n", reply->root);
-        printf("(int16_t) x: %u\n", reply->x);
-        printf("(int16_t) y: %u\n", reply->y);
-        printf("(uint16_t) width: %u\n", reply->width);
-        printf("(uint16_t) height: %u\n", reply->height);
-        printf("(uint16_t) border_width: %u\n\n", reply->border_width);
+        printf(
+            "xcb_get_geometry_reply_t = {\n"
+            "  \"response_type\": %u,\n"
+            "  \"depth\": %u,\n"
+            "  \"sequence\": %u,\n"
+            "  \"length\": %u,\n"
+            "  \"root\": %u,\n"
+            "  \"x\": %u,\n"
+            "  \"y\": %u,\n"
+            "  \"width\": %u,\n"
+            "  \"height\": %u,\n"
+            "  \"border_width\": %u\n"
+            "}\n",
+            reply->response_type,
+            reply->depth,
+            reply->sequence,
+            reply->length,
+            reply->root,
+            reply->x,
+            reply->y,
+            reply->width,
+            reply->height,
+            reply->border_width);
     }
 }
 
@@ -177,7 +191,7 @@ wpd_create_xcb_image_band(
 
     if (!xcb_image)
     {
-        printf("Failed to create the xcb image\n");
+        LOGERROR("Failed to create the xcb image\n");
         return NULL;
     }
 

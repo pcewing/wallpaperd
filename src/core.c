@@ -59,3 +59,9 @@ wpd_rand()
     return rand();
 }
 
+uint32_t
+wpd_min(uint32_t a, uint32_t b)
+{
+    return (a < b) ? a : b;
+}
+

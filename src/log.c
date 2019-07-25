@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define LOGLEVEL LOGLEVEL_INFO
+#define LOGLEVEL LOGLEVEL_DEBUG
 
 const char*
 log_level_str(const log_level_t level)

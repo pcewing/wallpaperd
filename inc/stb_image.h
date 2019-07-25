@@ -302,6 +302,7 @@ RECENT REVISION HISTORY:
 //     want the zlib decoder to be available, #define STBI_SUPPORT_ZLIB
 //
 
+#define UNUSED(x) (void)(x)
 
 #ifndef STBI_NO_STDIO
 #include <stdio.h>
@@ -6343,6 +6344,8 @@ static stbi_uc *stbi__gif_load_next(stbi__context *s, stbi__gif *g, int *comp, i
    int pi; 
    int pcount; 
 
+   UNUSED(req_comp);
+
    // on first frame, any non-written pixels get the background colour (non-transparent)
    first_frame = 0; 
    if (g->out == 0) {
@@ -6565,6 +6568,8 @@ static void *stbi__gif_load(stbi__context *s, int *x, int *y, int *comp, int req
    stbi_uc *u = 0;
    stbi__gif g;
    memset(&g, 0, sizeof(g));
+
+   UNUSED(ri);
 
    u = stbi__gif_load_next(s, &g, comp, req_comp, 0);
    if (u == (stbi_uc *) s) u = 0;  // end of animated gif marker

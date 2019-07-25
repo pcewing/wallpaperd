@@ -2,6 +2,7 @@
 #define CORE_H
 
 #include <string.h>
+#include <stdint.h>
 
 #define UNUSED(x) (void)(x)
 
@@ -54,6 +55,9 @@ wpd_srand();
 
 int
 wpd_rand();
+
+uint32_t
+wpd_min(uint32_t a, uint32_t b);
 
 #endif // CORE_H
 
