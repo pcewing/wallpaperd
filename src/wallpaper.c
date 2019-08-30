@@ -2,9 +2,7 @@
 #include "log.h"
 #include "image.h"
 
-// TODO: Get rid of this dependency; we should only print in log.h
 #include <stdio.h>
-
 #include <string.h>
 #include <stdbool.h>
 
@@ -14,39 +12,38 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-
-void
-print_error(const xcb_generic_error_t *error)
+char *
+xcb_generic_error_to_json(const xcb_generic_error_t *error)
 {
-    if (error)
+    const char * fmt = "{\n"
+        "  \"response_type\": %u,\n"
+        "  \"error_code\": %u,\n"
+        "  \"sequence\": %u,\n"
+        "  \"resource_id\": %u,\n"
+        "  \"minor_code\": %u,\n"
+        "  \"major_code\": %u,\n"
+        "  \"full_sequence\": %u,\n"
+        "}\n";
+
+    int length = snprintf(NULL, 0, fmt, error->response_type, error->error_code,
+            error->sequence, error->resource_id, error->minor_code,
+            error->major_code, error->full_sequence);
+
+    char * result = malloc(length * sizeof(char));
+    if (result)
     {
-        printf(
-            "xcb_generic_error_t = {\n"
-            "  \"response_type\": %u,\n"
-            "  \"error_code\": %u,\n"
-            "  \"sequence\": %u,\n"
-            "  \"resource_id\": %u,\n"
-            "  \"minor_code\": %u,\n"
-            "  \"major_code\": %u,\n"
-            "  \"full_sequence\": %u,\n"
-            "}\n",
-            error->response_type,
-            error->error_code,
-            error->sequence,
-            error->resource_id,
-            error->minor_code,
-            error->major_code,
-            error->full_sequence);
+        snprintf(result, length, fmt, error->response_type, error->error_code,
+                error->sequence, error->resource_id, error->minor_code,
+                error->major_code, error->full_sequence);
     }
+
+    return result;
 }
 
-void
-print_geometry(const xcb_get_geometry_reply_t *reply)
+char *
+xcb_get_geometry_reply_to_json(const xcb_get_geometry_reply_t *geometry)
 {
-    if (reply)
-    {
-        printf(
-            "xcb_get_geometry_reply_t = {\n"
+    const char * fmt = "{\n"
             "  \"response_type\": %u,\n"
             "  \"depth\": %u,\n"
             "  \"sequence\": %u,\n"
@@ -57,17 +54,51 @@ print_geometry(const xcb_get_geometry_reply_t *reply)
             "  \"width\": %u,\n"
             "  \"height\": %u,\n"
             "  \"border_width\": %u\n"
-            "}\n",
-            reply->response_type,
-            reply->depth,
-            reply->sequence,
-            reply->length,
-            reply->root,
-            reply->x,
-            reply->y,
-            reply->width,
-            reply->height,
-            reply->border_width);
+            "}\n";
+
+    int length = snprintf(NULL, 0, fmt, geometry->response_type,
+            geometry->depth, geometry->sequence, geometry->length,
+            geometry->root, geometry->x, geometry->y, geometry->width,
+            geometry->height, geometry->border_width);
+
+    char * result = malloc(length * sizeof(char));
+    if (result)
+    {
+        snprintf(result, length, fmt, geometry->response_type,
+                geometry->depth, geometry->sequence, geometry->length,
+                geometry->root, geometry->x, geometry->y, geometry->width,
+                geometry->height, geometry->border_width);
+    }
+
+    return result;
+}
+
+
+void
+print_error(const xcb_generic_error_t *error)
+{
+    if (error)
+    {
+        char * json = xcb_generic_error_to_json(error);
+        if (json)
+        {
+            LOGINFO("Error: %s", json);
+            free(json);
+        }
+    }
+}
+
+void
+print_geometry(const xcb_get_geometry_reply_t *geometry)
+{
+    if (geometry)
+    {
+        char * json = xcb_get_geometry_reply_to_json(geometry);
+        if (json)
+        {
+            LOGINFO("Geometry: %s", json);
+            free(json);
+        }
     }
 }
 
@@ -102,7 +133,7 @@ select_random_wallpaper(const struct wpd_db_t *db, int width, int height,
 }
 
 /*
- * Rewrite this; it's taken from:
+ * TODO: Grok this; it's taken from:
  * http://vincentsanders.blogspot.com/2010/04/xcb-programming-is-hard.html
  */
 static xcb_format_t*
@@ -118,21 +149,17 @@ wpd_find_format (xcb_connection_t *c, uint8_t depth, uint8_t bpp)
             return fmt;
         }
     }
-    return 0;
+    return NULL;
 }
 
 void
-wpd_get_xcb_image_band_data(
-    const struct wpd_image_t *image,
-    int                       row_index,
-    int                       row_count,
-    unsigned char            *data)
+wpd_get_xcb_image_band_data(const struct wpd_image_t *image, int row_index,
+        int row_count, unsigned char *data)
 {
-    unsigned char *image_data_itr;
-
     int pixels_to_copy = image->width * row_count;
 
-    image_data_itr = image->data + (row_index * image->width * image->bytes_per_pixel);
+    int offset = row_index * image->width * image->bytes_per_pixel;
+    unsigned char *image_data_itr = image->data + offset;
     while (pixels_to_copy > 0)
     {
         data[0] = image_data_itr[2]; // blue
@@ -146,52 +173,32 @@ wpd_get_xcb_image_band_data(
 }
 
 xcb_image_t*
-wpd_create_xcb_image_band(
-    xcb_connection_t                *connection,
-    const xcb_setup_t               *setup,
-    const struct wpd_image_t        *image,
-    uint32_t                         row_index,
-    uint32_t                         row_count)
+wpd_create_xcb_image_band(xcb_connection_t *connection,
+        const xcb_setup_t *setup, const struct wpd_image_t *image,
+        uint32_t row_index, uint32_t row_count)
 {
-    assert(setup);
-    //assert(geometry);
+    const uint8_t depth = 24;
+    const uint8_t bits_per_pixel = 32;
+    int byte_count = image->width * row_count * (bits_per_pixel / 8);
 
-    xcb_image_t                     *xcb_image;
-    uint8_t                         *data;
-    //uint8_t                          byte_depth;
-    int                              byte_count;
-    xcb_format_t                    *format;
+    // Note that we don't need to manually free this; it will be freed when we
+    // call xcb_image_destroy on the image we are creating.
+    uint8_t *data = malloc(byte_count);
 
-    // TODO: Why are all these numbers hard-coded?
-    //byte_depth = geometry->depth / 8;
-    //assert(byte_depth == 3);
-    uint8_t depth = 24;
-
-    uint8_t bits_per_pixel = 32;
-    byte_count = image->width * row_count * (bits_per_pixel / 8);
-    data = malloc(byte_count);
-
-    format = wpd_find_format(connection, depth, bits_per_pixel);
+    xcb_format_t *format = wpd_find_format(connection, depth, bits_per_pixel);
+    assert(format);
 
     wpd_get_xcb_image_band_data(image, row_index, row_count, data);
 
-    xcb_image = xcb_image_create(
-        image->width,
-        row_count,
-        XCB_IMAGE_FORMAT_Z_PIXMAP,
-        format->scanline_pad,
-        format->depth,
-        format->bits_per_pixel,
-        0,
-        setup->image_byte_order,
-        XCB_IMAGE_ORDER_MSB_FIRST,
-        data,
-        byte_count,
-        data);
+    xcb_image_t *xcb_image = xcb_image_create(image->width, row_count,
+            XCB_IMAGE_FORMAT_Z_PIXMAP, format->scanline_pad, format->depth,
+            format->bits_per_pixel, 0, setup->image_byte_order,
+            XCB_IMAGE_ORDER_MSB_FIRST, data, byte_count, data);
 
     if (!xcb_image)
     {
-        LOGERROR("Failed to create the xcb image\n");
+        LOGERROR("Failed to create the xcb image");
+        free(data);
         return NULL;
     }
 
@@ -224,16 +231,16 @@ wpd_xcb_image_put_chunked(
     row_index = 0;
     while (row_index < image->height)
     {
-        xcb_image_t *xcb_image;
-
         uint32_t rows_remaining = image->height - row_index;
         uint32_t row_count = wpd_min(rows_per_request, rows_remaining);
 
-        // TODO: Create an xcb_image_t for this specific "band"
-        xcb_image = wpd_create_xcb_image_band(connection, setup, image,
+        // Create an xcb_image_t for this specific "band"
+        xcb_image_t *xcb_image = wpd_create_xcb_image_band(connection, setup, image,
             row_index, row_count);
 
         xcb_image_put(connection, pixmap, gcontext, xcb_image, 0, row_index, 0);
+
+        xcb_image_destroy(xcb_image);
 
         row_index += row_count;
     }
@@ -249,30 +256,93 @@ wpd_put_image_on_pixmap(
     const xcb_window_t       window,
     struct wpd_image_t      *image)
 {
-    xcb_pixmap_t pixmap;
-    xcb_gcontext_t gcontext;
-    uint32_t gcontext_mask;
-    uint32_t gcontext_values[2];
-
     // Create a pixmap we will copy the image onto
-    pixmap = xcb_generate_id(connection);
+    xcb_pixmap_t pixmap = xcb_generate_id(connection);
+    // TODO: We never free this pixmap
     xcb_create_pixmap(connection, 24, pixmap, window, image->width,
         image->height);
 
     // Create a graphics context to perform the copy
-    gcontext_mask = XCB_GC_FOREGROUND | XCB_GC_BACKGROUND;
-    gcontext_values[0] = screen->black_pixel;
-    gcontext_values[1] = 0xffffff;
+    uint32_t gcontext_mask = XCB_GC_FOREGROUND | XCB_GC_BACKGROUND;
+    uint32_t gcontext_values[] = { screen->black_pixel, 0xffffff };
 
-    gcontext = xcb_generate_id(connection);
-    xcb_create_gc(connection, gcontext, pixmap, gcontext_mask,
-        gcontext_values);
+    xcb_gcontext_t gc = xcb_generate_id(connection);
+    xcb_create_gc(connection, gc, pixmap, gcontext_mask, gcontext_values);
 
     // Copy the image onto the pixmap, splitting it into horizontal bands as
     // necessary so as not to exceed the maximum xcb request length
-    wpd_xcb_image_put_chunked(connection, setup, pixmap, gcontext, image);
+    wpd_xcb_image_put_chunked(connection, setup, pixmap, gc, image);
+
+    xcb_void_cookie_t xcb_free_gc_cookie = xcb_free_gc(connection, gc);
+    xcb_generic_error_t *xcb_free_gc_error = xcb_request_check(connection,
+            xcb_free_gc_cookie);
+    assert(!xcb_free_gc_error);
 
     return pixmap;
+}
+
+// Note: The structure returned by this method needs to be freed by the caller
+xcb_intern_atom_reply_t *
+get_intern_atom(xcb_connection_t *connection, const char *atom_name)
+{
+    static const bool only_if_exists = true;
+
+    xcb_intern_atom_cookie_t cookie = xcb_intern_atom(connection,
+            only_if_exists, strlen(atom_name), atom_name);
+
+    xcb_generic_error_t *error;
+    xcb_intern_atom_reply_t *intern_atom_reply = xcb_intern_atom_reply(
+            connection, cookie, &error);
+
+    assert(!error);
+    assert(intern_atom_reply);
+
+    return intern_atom_reply;
+}
+
+// Note: The structure returned by this method needs to be freed by the caller
+xcb_get_property_reply_t *
+get_pixmap_property(
+    xcb_connection_t        *connection,
+    xcb_window_t             window,
+    xcb_intern_atom_reply_t *intern_atom)
+{
+    static const uint8_t delete = 0;
+    static const uint8_t offset = 0;
+    static const uint8_t length = 0;
+
+    xcb_get_property_cookie_t get_property_cookie = xcb_get_property(
+            connection, delete, window, intern_atom->atom, XCB_ATOM_PIXMAP,
+            offset, length);
+
+    xcb_generic_error_t *error;
+    xcb_get_property_reply_t *get_property_reply = xcb_get_property_reply(
+            connection, get_property_cookie, &error);
+
+    assert(!error);
+    assert(get_property_reply);
+
+    return get_property_reply;
+}
+
+xcb_pixmap_t
+get_pixmap_atom(
+    xcb_connection_t *c,
+    const char       *atom_name,
+    xcb_window_t      window)
+{
+    xcb_intern_atom_reply_t *intern_atom = get_intern_atom(c, atom_name);
+
+    xcb_get_property_reply_t *pixmap_property = get_pixmap_property(c, window,
+            intern_atom);
+
+    xcb_pixmap_t pixmap_id = *((xcb_pixmap_t*) xcb_get_property_value(
+                pixmap_property));
+
+    free(intern_atom);
+    free(pixmap_property);
+
+    return pixmap_id;
 }
 
 void
@@ -282,39 +352,28 @@ set_pixmap_atom(
     xcb_window_t window,
     xcb_pixmap_t pixmap_id)
 {
-    xcb_intern_atom_cookie_t   intern_atom_cookie;
-    xcb_intern_atom_reply_t   *intern_atom_reply;
-    xcb_generic_error_t       *error;
+    xcb_intern_atom_reply_t *intern_atom = get_intern_atom(c, atom_name);
 
-    intern_atom_cookie = xcb_intern_atom(c, true, strlen(atom_name), atom_name);
-    intern_atom_reply = xcb_intern_atom_reply(c, intern_atom_cookie, &error);
-
-    assert(!error);
-    assert(intern_atom_reply);
-
-    xcb_get_property_cookie_t        get_property_cookie;
-    xcb_get_property_reply_t        *get_property_reply;
-
-    get_property_cookie = xcb_get_property(c, 0, window, intern_atom_reply->atom, XCB_ATOM_PIXMAP, 0, 0);
-    get_property_reply = xcb_get_property_reply(c, get_property_cookie, &error);
-    assert(!error);
-    assert(get_property_reply);
+    xcb_get_property_reply_t *pixmap_property = get_pixmap_property(c, window,
+            intern_atom);
 
     xcb_void_cookie_t change_property_cookie;
     change_property_cookie = xcb_change_property_checked(
         c,
         XCB_PROP_MODE_REPLACE,
         window,
-        intern_atom_reply->atom,
-        get_property_reply->type,
-        get_property_reply->format,
+        intern_atom->atom,
+        pixmap_property->type,
+        pixmap_property->format,
         1,
         (unsigned char *)&pixmap_id);
 
+    xcb_generic_error_t *error;
     error = xcb_request_check(c, change_property_cookie);
     assert(!error);
 
-    free(intern_atom_reply);
+    free(intern_atom);
+    free(pixmap_property);
 }
 
 wpd_error_t
@@ -325,18 +384,41 @@ wpd_set_wallpaper(
     struct xcb_get_geometry_reply_t *geometry,
     const char                      *image_path)
 {
-    struct wpd_image_t             *image;
-    xcb_pixmap_t                    pixmap;
+    struct wpd_image_t  *image;
+    xcb_pixmap_t         new_pixmap,
+                         xroot_pixmap,
+                         esetroot_pixmap;
+    xcb_generic_error_t *error;
     
     TRY(wpd_get_image(image_path, &image));
 
-    LOGINFO("Setting wallpaper to %s\n", image_path);
-    
-    pixmap = wpd_put_image_on_pixmap(connection, setup, screen, screen->root,
-        image);
+    LOGINFO("Setting wallpaper to %s", image_path);
 
-    set_pixmap_atom(connection, "_XROOTPMAP_ID", screen->root, pixmap);
-    set_pixmap_atom(connection, "ESETROOT_PMAP_ID", screen->root, pixmap);
+    // Get the existing background pixmap(s)
+    xroot_pixmap = get_pixmap_atom(connection, "_XROOTPMAP_ID", screen->root);
+    esetroot_pixmap = get_pixmap_atom(connection, "ESETROOT_PMAP_ID",
+            screen->root);
+    
+    // Create a new background pixmap
+    new_pixmap = wpd_put_image_on_pixmap(connection, setup, screen,
+            screen->root, image);
+
+    // Set the new background pixmap
+    set_pixmap_atom(connection, "_XROOTPMAP_ID", screen->root, new_pixmap);
+    set_pixmap_atom(connection, "ESETROOT_PMAP_ID", screen->root, new_pixmap);
+    
+    // Free the old background pixmap(s)
+    xcb_void_cookie_t xcb_free_pixmap_cookie = xcb_free_pixmap(connection,
+            xroot_pixmap);
+    error = xcb_request_check(connection, xcb_free_pixmap_cookie);
+    assert(!error);
+
+    if (esetroot_pixmap != xroot_pixmap)
+    {
+        xcb_free_pixmap_cookie = xcb_free_pixmap(connection, esetroot_pixmap);
+        error = xcb_request_check(connection, xcb_free_pixmap_cookie);
+        assert(!error);
+    }
 
     xcb_clear_area(connection, 1, screen->root, 0, 0,
         geometry->width, geometry->height);
@@ -355,17 +437,15 @@ wpd_set_wallpaper_for_screen(
     const xcb_setup_t *setup,
     xcb_screen_t *screen)
 {
-    xcb_get_geometry_cookie_t    cookie;
-    xcb_generic_error_t         *error = NULL;
-    xcb_get_geometry_reply_t    *geometry;
-    xcb_window_t                 root_window;
-    char                        *image_path = NULL;
+    xcb_window_t root_window = screen->root;
+    LOGINFO("Getting geometry for root window (Id = %u)", root_window);
 
-    root_window = screen->root;
-    LOGINFO("Getting geometry for root window (Id = %u)\n", root_window);
+    xcb_get_geometry_cookie_t cookie = xcb_get_geometry(connection,
+            root_window);
 
-    cookie = xcb_get_geometry(connection, root_window);
-    geometry = xcb_get_geometry_reply(connection, cookie, &error);
+    xcb_generic_error_t *error = NULL;
+    xcb_get_geometry_reply_t *geometry = xcb_get_geometry_reply(connection,
+            cookie, &error);
 
     if (error)
     {
@@ -375,11 +455,17 @@ wpd_set_wallpaper_for_screen(
 
     print_geometry(geometry);
 
-    LOGINFO("Finding images with compatible dimensions\n");
+    LOGINFO("Finding images with compatible dimensions");
 
     // Get compatible images
-    TRY(select_random_wallpaper(db, geometry->width, geometry->height,
-        &image_path));
+    char *image_path = NULL;
+    wpd_error_t wpd_error = select_random_wallpaper(db, geometry->width,
+            geometry->height, &image_path);
+    if (wpd_error != WPD_ERROR_SUCCESS)
+    {
+        return wpd_error;
+    }
+
     wpd_set_wallpaper(connection, setup, screen, geometry,
         image_path);
 
@@ -392,20 +478,16 @@ wpd_error_t
 wpd_set_wallpapers(
     const struct wpd_db_t *db)
 {
-    xcb_connection_t        *connection;
-    const xcb_setup_t       *setup;
-    xcb_screen_iterator_t    screen_iterator;
-    uint8_t                  screen_index;
-        
-    connection = xcb_connect(NULL, NULL);
-    setup = xcb_get_setup(connection);
+    xcb_connection_t *connection = xcb_connect(NULL, NULL);
+    const xcb_setup_t *setup = xcb_get_setup(connection);
 
-    screen_index = 1;
-    screen_iterator = xcb_setup_roots_iterator(setup);
+    uint8_t screen_index = 1;
+    xcb_screen_iterator_t screen_iterator = xcb_setup_roots_iterator(setup);
     while (screen_iterator.rem)
     {
-        LOGINFO("Processing screen %u\n", screen_index++);
-        wpd_set_wallpaper_for_screen(db, connection, setup, screen_iterator.data);
+        LOGINFO("Processing screen %u", screen_index++);
+        wpd_set_wallpaper_for_screen(db, connection, setup,
+                screen_iterator.data);
         xcb_screen_next(&screen_iterator);
     }
 
