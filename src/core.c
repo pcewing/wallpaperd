@@ -28,14 +28,8 @@ wpd_error_str(wpd_error_t error)
 char*
 wpd_get_extension(const char *filename)
 {
-    char *temp, *result = NULL;
-
-    temp = strrchr(filename, '.');
-    if (temp) {
-        result = temp + 1;
-    }
-
-    return result;
+    char *temp = strrchr(filename, '.');
+    return (temp) ? temp + 1 : NULL;
 }
 
 unsigned int

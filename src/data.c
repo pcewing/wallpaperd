@@ -27,22 +27,19 @@ int create_wallpaper_table(sqlite3 *db);
 wpd_error_t
 initialize_database(struct wpd_db_t** result)
 {
-    struct wpd_db_t *db;
-    int              rc;
+    struct wpd_db_t *db = malloc(sizeof(struct wpd_db_t));
 
-    db = malloc(sizeof(struct wpd_db_t));
-
-    rc = sqlite3_open(":memory:", &db->handle);
-    if (rc)
+    int rc = sqlite3_open(":memory:", &db->handle);
+    if (rc != 0)
     {
         fprintf(stderr, "Can't open database: %s\n",
-            sqlite3_errmsg(db->handle));
+                sqlite3_errmsg(db->handle));
         sqlite3_close(db->handle);
         return WPD_ERROR_TODO;
     }
 
     rc = create_tables(db->handle);
-    if (rc)
+    if (rc != 0)
     {
         sqlite3_close(db->handle);
         return WPD_ERROR_TODO;
@@ -53,27 +50,25 @@ initialize_database(struct wpd_db_t** result)
 }
 
 wpd_error_t
-insert_wallpaper(const struct wpd_db_t *db, const struct wpd_wallpaper_entity_t *wallpaper)
+insert_wallpaper(const struct wpd_db_t *db,
+        const struct wpd_wallpaper_entity_t *wallpaper)
 {
-    char         *query;
-    const char   *query_template;
-    sqlite3_stmt *stmt;
-    int           rc;
-
     assert(wallpaper);
 
-    query = NULL;
-    query_template =
+    const char *query_template =
         "insert into "
         "    wallpaper (path, width, height) "
         "values "
         "    ('%s', '%u', '%u');";
 
-    asprintf(&query, query_template, wallpaper->path, wallpaper->width, wallpaper->height);
+    char *query = NULL;
+    asprintf(&query, query_template, wallpaper->path, wallpaper->width,
+            wallpaper->height);
 
+    sqlite3_stmt *stmt;
     sqlite3_prepare_v2(db->handle, query, strlen(query), &stmt, NULL);  
 
-    rc = sqlite3_step(stmt);
+    int rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE)
     {
         printf("Failed to insert wallpaper: %s\n", sqlite3_errmsg(db->handle));
@@ -89,20 +84,16 @@ insert_wallpaper(const struct wpd_db_t *db, const struct wpd_wallpaper_entity_t 
 int
 get_wallpaper_count(const struct wpd_db_t *db)
 {
+    const char *query = "select count(*) from wallpaper;";
+
     sqlite3_stmt *stmt;
-    int           rc,
-                  count;
-    const char   *query;
-
-    query = "select count(*) from wallpaper;";
-
-    rc = sqlite3_prepare_v2(db->handle, query, -1, &stmt, NULL);
+    int rc = sqlite3_prepare_v2(db->handle, query, -1, &stmt, NULL);
     assert(rc == SQLITE_OK);
 
     rc = sqlite3_step(stmt);
     assert(rc == SQLITE_ROW);
 
-    count = sqlite3_column_int(stmt, 0);
+    int count = sqlite3_column_int(stmt, 0);
 
     sqlite3_finalize(stmt); 
 
@@ -110,15 +101,10 @@ get_wallpaper_count(const struct wpd_db_t *db)
 }
 
 int
-get_wallpaper_by_dimensions_count(const struct wpd_db_t *db, int width, int height)
+get_wallpaper_by_dimensions_count(const struct wpd_db_t *db, int width,
+        int height)
 {
-    sqlite3_stmt *stmt;
-    int           rc,
-                  count;
-    const char   *query_template;
-    char         *query;
-
-    query_template =
+    const char *query_template =
         "select "
         "    count(*) "
         "from "
@@ -126,15 +112,17 @@ get_wallpaper_by_dimensions_count(const struct wpd_db_t *db, int width, int heig
         "where "
             "width = %u and height = %u;";
 
+    char *query;
     asprintf(&query, query_template, width, height);
 
-    rc = sqlite3_prepare_v2(db->handle, query, -1, &stmt, NULL);
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db->handle, query, -1, &stmt, NULL);
     assert(rc == SQLITE_OK);
 
     rc = sqlite3_step(stmt);
     assert(rc == SQLITE_ROW);
 
-    count = sqlite3_column_int(stmt, 0);
+    int count = sqlite3_column_int(stmt, 0);
 
     sqlite3_finalize(stmt); 
     free(query);
@@ -146,23 +134,18 @@ wpd_error_t
 get_wallpapers(const struct wpd_db_t  *db,
        struct wpd_wallpaper_result_set_t **result_set)
 {
-    const char                    *query;
-    sqlite3_stmt                  *stmt;
-    struct wpd_wallpaper_entity_t *wallpapers;
-    int                            rc,
-                                   wallpaper_count,
-                                   i;
-
-    wallpaper_count = get_wallpaper_count(db);
+    int wallpaper_count = get_wallpaper_count(db);
     assert(wallpaper_count > 0);
 
-    wallpapers = malloc(wallpaper_count * sizeof(struct wpd_wallpaper_entity_t));
+    struct wpd_wallpaper_entity_t *wallpapers = malloc(
+            wallpaper_count * sizeof(struct wpd_wallpaper_entity_t));
 
-    query = "select path, width, height from wallpaper;";
+    const char *query = "select path, width, height from wallpaper;";
 
+    sqlite3_stmt *stmt;
     sqlite3_prepare_v2(db->handle, query, strlen(query), &stmt, NULL);  
 
-    i = 0;
+    int i = 0, rc;
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
     {
         wallpapers[i].path = strdup((const char *)sqlite3_column_text(stmt, 0));
@@ -185,20 +168,13 @@ wpd_error_t
 get_wallpapers_by_dimensions(const struct wpd_db_t *db, int width, int height,
        struct wpd_wallpaper_result_set_t **result_set)
 {
-    char                          *query;
-    const char                    *query_template;
-    sqlite3_stmt                  *stmt;
-    struct wpd_wallpaper_entity_t *wallpapers;
-    int                            rc,
-                                   wallpaper_count,
-                                   i;
-
-    wallpaper_count = get_wallpaper_by_dimensions_count(db, width, height);
+    int wallpaper_count = get_wallpaper_by_dimensions_count(db, width, height);
     assert(wallpaper_count > 0);
 
-    wallpapers = malloc(wallpaper_count * sizeof(struct wpd_wallpaper_entity_t));
+    struct wpd_wallpaper_entity_t *wallpapers = malloc(
+            wallpaper_count * sizeof(struct wpd_wallpaper_entity_t));
 
-    query_template =
+    const char *query_template =
         "select "
         "    path, width, height "
         "from "
@@ -206,10 +182,13 @@ get_wallpapers_by_dimensions(const struct wpd_db_t *db, int width, int height,
         "where "
         "    width = %u and height = %u;";
 
+    char *query;
     asprintf(&query, query_template, width, height);
 
+    sqlite3_stmt *stmt;
     sqlite3_prepare_v2(db->handle, query, strlen(query), &stmt, NULL);  
 
+    int i, rc;
     for (i = 0; (rc = sqlite3_step(stmt)) == SQLITE_ROW; i++)
     {
         wallpapers[i].path = strdup((const char *)sqlite3_column_text(stmt, 0));
@@ -246,9 +225,7 @@ cleanup_database(struct wpd_db_t** db)
 wpd_error_t
 create_tables(sqlite3 *db)
 {
-    int rc;
-
-    rc = create_wallpaper_table(db);
+    int rc = create_wallpaper_table(db);
     if (rc)
     {
         sqlite3_close(db);
@@ -261,11 +238,7 @@ create_tables(sqlite3 *db)
 int
 create_wallpaper_table(sqlite3 *db)
 {
-    const char   *query;
-    sqlite3_stmt *stmt;
-    int           rc;
-
-    query = 
+    const char *query = 
         "create table wallpaper ("
             "wallpaper_id integer primary key,"
             "width integer not null,"
@@ -273,9 +246,10 @@ create_wallpaper_table(sqlite3 *db)
             "path text not null unique"
         ");";
 
+    sqlite3_stmt *stmt;
     sqlite3_prepare_v2(db, query, -1, &stmt, NULL); 
 
-    rc = sqlite3_step(stmt);
+    int rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE)
     {
         printf("Failed to create wallpaper database table: %s\n", sqlite3_errmsg(db));
