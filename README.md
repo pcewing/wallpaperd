@@ -1,24 +1,20 @@
 # wallpaperd - Wallpaper Daemon
 
-TODO: Add description
+An X11 application that periodically chooses a new random wallpaper for every
+monitor by detecting screen dimensions. The primary motivation behind the
+application was to familiarize with X11 and specifically `xcb`.
 
-## TODO List
+As a user of `i3wm` and `compton` this application is being written with those
+in mind. It probably won't work under other window managers, compositors, or
+desktop environments.
 
-- Triage issue where some wallpapers don't update correctly
-- Address all missing documentation in header files
-- Support a config file (YAML?)
-    - Consider looking at how netplan deserializes yaml
-- Make coding style consistent
-- Address missing error handling
-- Improve logging
-- Replace all instances of `WPD_ERROR_TODO` with real error codes
+**WIP Warning:** This project is still heavily work in progress.
 
 ## Dependencies:
-```
+
 - xcb
 - sqlite3
-- stb_image*
+- stb\_image\*
 
-*This is a single header library and is checked directly into the source tree
-```
+\*This is a single header library and is checked directly into the source tree
 
