@@ -7,27 +7,23 @@
 wpd_error_t
 wpd_main_loop(const char *search_path)
 {
-    struct wpd_db_t *db;
-    wpd_error_t      error;
-
     // Seed the rng that will be used to select images
     wpd_srand();
 
-    error = initialize_database(&db);
-    if (error)
-    {
+    struct wpd_db_t *db;
+    wpd_error_t error = initialize_database(&db);
+    if (error != WPD_ERROR_SUCCESS)
         return error;
-    }
 
     error = wpd_ftw(db, search_path);
-    if (error)
-    {
+    if (error != WPD_ERROR_SUCCESS)
         return error;
-    }
 
     while (1)
     {
-        TRY(wpd_set_wallpapers(db));
+        error = wpd_set_wallpapers(db);
+        if (error != WPD_ERROR_SUCCESS)
+            return error;
 
         if (wpd_sleep(2) != 0)
         {
@@ -48,9 +44,6 @@ wpd_main_loop(const char *search_path)
 int
 main(int argc, char *argv[])
 {
-    UNUSED(argc);
-    UNUSED(argv);
-
     wpd_error_t error;
     char *search_path;
     

@@ -390,7 +390,11 @@ wpd_set_wallpaper(
                          esetroot_pixmap;
     xcb_generic_error_t *error;
     
-    TRY(wpd_get_image(image_path, &image));
+    wpd_error_t wpd_error = wpd_get_image(image_path, &image);
+    if (wpd_error != WPD_ERROR_SUCCESS)
+    {
+        return wpd_error;
+    }
 
     LOGINFO("Setting wallpaper to %s", image_path);
 
@@ -470,6 +474,7 @@ wpd_set_wallpaper_for_screen(
         image_path);
 
     free(geometry);
+    free(image_path);
 
     return WPD_ERROR_SUCCESS;
 }

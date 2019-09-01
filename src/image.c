@@ -49,6 +49,7 @@ wpd_free_image(struct wpd_image_t** image)
     }
     
     free(*image);
+    image = NULL;
 
     return WPD_ERROR_SUCCESS;
 }
@@ -81,7 +82,8 @@ wpd_free_image_metadata(struct wpd_image_metadata_t** image_metadata)
         return WPD_ERROR_NULL_PARAM;
     }
 
-    FREE(*image_metadata);
+    free(*image_metadata);
+    image_metadata = NULL;
 
     return WPD_ERROR_SUCCESS;
 }

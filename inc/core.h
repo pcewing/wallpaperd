@@ -19,22 +19,6 @@ typedef int wpd_error_t;
 
 #define WPD_ERROR_DATABASE_TABLE_CREATION_FAILURE 0x0007
 
-#define TRY(statement) { \
-        wpd_error_t wpd__error; \
-        wpd__error = statement; \
-        if (wpd__error != WPD_ERROR_SUCCESS) \
-        { \
-            return wpd__error; \
-        } \
-    }
-
-#define FREE(ptr) \
-    if (ptr) \
-    { \
-        free(ptr); \
-        ptr = NULL; \
-    }
-
 void
 wpd_exit(int exit_code);
 

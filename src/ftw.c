@@ -127,7 +127,6 @@ process_directory_entry(
     }
 
     full_path = path_join(parent_dir, entry->d_name);
-    //LOGDEBUG("%s %s", type_str(entry->d_type), full_path);
 
 #define WPD_FTW_CASE_NOOP(TYPE) case TYPE: break;
 #define WPD_FTW_CASE(TYPE, PROCESSOR) \
@@ -175,7 +174,9 @@ wpd_ftw(const struct wpd_db_t* db, const char *path)
 
     while ((entry = readdir(dirp)))
     {
-        process_directory_entry(db, path, entry);
+        wpd_error_t wpd_error = process_directory_entry(db, path, entry);
+        if (wpd_error != WPD_ERROR_SUCCESS)
+            return wpd_error;
     }
 
     closedir(dirp);
