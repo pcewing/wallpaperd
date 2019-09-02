@@ -23,6 +23,9 @@ all: wallpaperd
 build_dir:
 	mkdir -p build
 
+error.o: build_dir
+	gcc -c -o build/error.o $(CFLAGS_BASE) $(SRC)/error.g.c
+
 config.o: build_dir
 	gcc -c -o build/config.o $(CFLAGS_BASE) $(SRC)/config.c
 
@@ -44,7 +47,7 @@ wallpaper.o: build_dir
 data.o: build_dir
 	gcc -c -o build/data.o $(CFLAGS_BASE) $(SRC)/data.c
 
-wallpaperd: build_dir ftw.o log.o core.o wallpaper.o image.o data.o config.o
+wallpaperd: build_dir ftw.o log.o core.o wallpaper.o image.o data.o config.o error.o
 	cc -o build/wallpaperd $(SRC)/main.c build/*.o $(CFLAGS) $(LDFLAGS)
 
 clean:

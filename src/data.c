@@ -7,6 +7,7 @@
 #include <sqlite3.h>
 
 #include "data.h"
+#include "log.h"
 
 struct wpd_db_t
 {
@@ -32,17 +33,16 @@ initialize_database(struct wpd_db_t** result)
     int rc = sqlite3_open(":memory:", &db->handle);
     if (rc != 0)
     {
-        fprintf(stderr, "Can't open database: %s\n",
-                sqlite3_errmsg(db->handle));
+        LOGERROR("Can't open database: %s\n", sqlite3_errmsg(db->handle));
         sqlite3_close(db->handle);
-        return WPD_ERROR_TODO;
+        return WPD_ERROR_DATABASE_OPEN_FAILURE;
     }
 
-    rc = create_tables(db->handle);
-    if (rc != 0)
+    wpd_error_t error = create_tables(db->handle);
+    if (error != WPD_ERROR_SUCCESS)
     {
         sqlite3_close(db->handle);
-        return WPD_ERROR_TODO;
+        return error;
     }
 
     *result = db;

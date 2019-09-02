@@ -5,6 +5,7 @@
 #include "data.h"
 #include "ftw.h"
 #include "signal.h"
+#include "error.g.h"
 
 wpd_error_t
 wpd_main_loop(struct wpd_config_t *config)

@@ -255,7 +255,6 @@ wpd_put_image_on_pixmap(
 {
     // Create a pixmap we will copy the image onto
     xcb_pixmap_t pixmap = xcb_generate_id(connection);
-    // TODO: We never free this pixmap
     xcb_create_pixmap(connection, 24, pixmap, window, image->width,
         image->height);
 
@@ -451,7 +450,7 @@ wpd_set_wallpaper_for_screen(
     if (error)
     {
         print_error(error);
-        return WPD_ERROR_TODO;
+        return WPD_ERROR_XCB_GET_GEOMETRY_FAILED;
     }
 
     print_geometry(geometry);

@@ -18,10 +18,8 @@ wpd_get_image(const char* path, struct wpd_image_t** result)
     if (!data)
     {
         LOGERROR("STBI_LOAD failure");
-        return WPD_ERROR_TODO;
+        return WPD_ERROR_STBI_IMAGE_LOAD_FAILURE;
     }
-
-    LOGINFO("STBI_LOAD success");
 
     image = malloc(sizeof(struct wpd_image_t));
     image->width = x;

@@ -2,11 +2,23 @@
     <Error name="SUCCESS" />
     <Error name="FAILURE" />
 
+    <Error name="XCB_GET_GEOMETRY_FAILED" />
+
     <Error name="UNKNOWN_FILENAME" />
     <Error name="UNKNOWN_EXTENSION" />
     <Error name="NULL_PARAM" />
     <Error name="TODO" />
     <Error name="NO_COMPATIBLE_IMAGE" />
 
+    <Error name="STBI_IMAGE_LOAD_FAILURE" />
+
+    <Error name="DATABASE_OPEN_FAILURE" />
     <Error name="DATABASE_TABLE_CREATION_FAILURE" />
+
+    <Error name="PARSE_FAILURE" />
+    <Error name="DUPLICATE_CONFIG_DEFINITION" />
+    <Error name="MISSING_YAML_MAP_ITEM_HANDLER" />
+    <Error name="FILE_OPEN_FAILURE" />
+    <Error name="YAML_PARSER_LOAD_FAILURE" />
+    <Error name="HOME_PATH_UNDEFINED" />
 </Errors>

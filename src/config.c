@@ -96,7 +96,7 @@ parse_bool(const char *data, bool *result)
     else if (match(f, lower))
         *result = false;
     else
-        error = WPD_ERROR_TODO;
+        error = WPD_ERROR_PARSE_FAILURE;
 
     free(lower);
     return error;
@@ -139,7 +139,7 @@ handle_search_paths(yaml_document_t* doc, yaml_node_t* node, struct wpd_config_t
     if (config->search_paths != NULL)
     {
         LOGERROR("Duplicate definition of search_paths in config");
-        return WPD_ERROR_TODO;
+        return WPD_ERROR_DUPLICATE_CONFIG_DEFINITION;
     }
 
     config->search_path_count = 0;
@@ -185,7 +185,7 @@ handle_mapping(yaml_document_t* doc, yaml_node_t* node, const struct map_item_ha
         assert(key->type == YAML_SCALAR_NODE);
         const struct map_item_handler *handler = get_handler(handlers, scalar(key));
         if (!handler)
-            return WPD_ERROR_TODO;
+            return WPD_ERROR_MISSING_YAML_MAP_ITEM_HANDLER;
         assert(value->type == handler->type);
 
         wpd_error_t error;
@@ -226,7 +226,7 @@ load_yaml(const char *path, yaml_document_t* doc)
 {
     FILE *input = fopen(path, "rb");
     if (!input)
-        return WPD_ERROR_TODO;
+        return WPD_ERROR_FILE_OPEN_FAILURE;
 
     yaml_parser_t parser;
     yaml_parser_initialize(&parser);
@@ -234,7 +234,7 @@ load_yaml(const char *path, yaml_document_t* doc)
 
     wpd_error_t error = WPD_ERROR_SUCCESS;
     if (!yaml_parser_load(&parser, doc)) {
-        error = WPD_ERROR_TODO;
+        error = WPD_ERROR_YAML_PARSER_LOAD_FAILURE;
     }
 
     fclose(input);
@@ -278,7 +278,7 @@ locate_config(char **config_path)
         // Fall back to $HOME/.config
         char *home = getenv("HOME");
         if (!home)
-            return WPD_ERROR_TODO;
+            return WPD_ERROR_HOME_PATH_UNDEFINED;
 
         config_dir = wpd_path_join(home, ".config/wallpaperd");
     }

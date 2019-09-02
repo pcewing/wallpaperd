@@ -8,28 +8,28 @@
 #include "error.g.h"
 #include <assert.h>
 
+static const char * error_strings[] = {
+    "WPD_ERROR_SUCCESS",
+    "WPD_ERROR_FAILURE",
+    "WPD_ERROR_XCB_GET_GEOMETRY_FAILED",
+    "WPD_ERROR_UNKNOWN_FILENAME",
+    "WPD_ERROR_UNKNOWN_EXTENSION",
+    "WPD_ERROR_NULL_PARAM",
+    "WPD_ERROR_TODO",
+    "WPD_ERROR_NO_COMPATIBLE_IMAGE",
+    "WPD_ERROR_STBI_IMAGE_LOAD_FAILURE",
+    "WPD_ERROR_DATABASE_OPEN_FAILURE",
+    "WPD_ERROR_DATABASE_TABLE_CREATION_FAILURE",
+    "WPD_ERROR_PARSE_FAILURE",
+    "WPD_ERROR_DUPLICATE_CONFIG_DEFINITION",
+    "WPD_ERROR_MISSING_YAML_MAP_ITEM_HANDLER",
+    "WPD_ERROR_FILE_OPEN_FAILURE",
+    "WPD_ERROR_YAML_PARSER_LOAD_FAILURE",
+    "WPD_ERROR_HOME_PATH_UNDEFINED",
+};
+
 const char *
 wpd_error_str(wpd_error_t error)
 {
-    switch (error)
-    {
-    case 0: // WPD_ERROR_SUCCESS
-        return "WPD_ERROR_SUCCESS";
-    case 1: // WPD_ERROR_FAILURE
-        return "WPD_ERROR_FAILURE";
-    case 2: // WPD_ERROR_UNKNOWN_FILENAME
-        return "WPD_ERROR_UNKNOWN_FILENAME";
-    case 3: // WPD_ERROR_UNKNOWN_EXTENSION
-        return "WPD_ERROR_UNKNOWN_EXTENSION";
-    case 4: // WPD_ERROR_NULL_PARAM
-        return "WPD_ERROR_NULL_PARAM";
-    case 5: // WPD_ERROR_TODO
-        return "WPD_ERROR_TODO";
-    case 6: // WPD_ERROR_NO_COMPATIBLE_IMAGE
-        return "WPD_ERROR_NO_COMPATIBLE_IMAGE";
-    case 7: // WPD_ERROR_DATABASE_TABLE_CREATION_FAILURE
-        return "WPD_ERROR_DATABASE_TABLE_CREATION_FAILURE";
-    default:
-        assert(0);
-    }
+    return error_strings[error];
 }

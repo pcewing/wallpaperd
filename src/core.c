@@ -8,24 +8,9 @@
 
 #define PATH_SEPARATOR "/"
 
-const char* error_strings[] = {
-    "WPD_ERROR_SUCCESS",
-    "WPD_ERROR_FAILURE",
-    "WPD_ERROR_UNKNOWN_FILENAME",
-    "WPD_ERROR_UNKNOWN_EXTENSION",
-    "WPD_ERROR_NULL_PARAM",
-    "WPD_ERROR_TODO"
-};
-
 void wpd_exit(wpd_error_t exit_code)
 {
     exit(exit_code);
-}
-
-const char*
-wpd_error_str(wpd_error_t error)
-{
-    return error_strings[error];
 }
 
 char*

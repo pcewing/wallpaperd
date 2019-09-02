@@ -54,6 +54,10 @@ def generate_error_header(errors, path):
     writer = Writer(path)
 
     writer.write_comment_header()
+    writer.write_blank_line()
+
+    writer.write_line('#ifndef ERROR_G_H')
+    writer.write_line('#define ERROR_G_H')
 
     writer.write_blank_line()
 
@@ -66,13 +70,17 @@ def generate_error_header(errors, path):
     writer.write_blank_line()
 
     for error in errors:
-        writer.write_line("static const uint32_t {} = {};".format(
+        writer.write_line("static const wpd_error_t {} = {};".format(
             error.full_name(), error.index))
 
     writer.write_blank_line()
     
     writer.write_line("const char *")
     writer.write_line("wpd_error_str(wpd_error_t error);")
+
+    writer.write_blank_line()
+
+    writer.write_line('#endif // ERROR_G_H')
 
     writer.write_blank_line()
 
@@ -90,27 +98,24 @@ def generate_error_implementation(errors, path):
 
     writer.write_blank_line()
 
+    writer.write_line("static const char * error_strings[] = {")
+    writer.increase_indent()
+    for error in errors:
+        writer.write_line('"{}",'.format(error.full_name()))
+    writer.decrease_indent()
+    writer.write_line("};")
+
+    writer.write_blank_line()
+
     writer.write_line("const char *")
     writer.write_line("wpd_error_str(wpd_error_t error)")
     writer.write_line("{")
-
     writer.increase_indent()
-    writer.write_line("switch (error)")
-    writer.write_line("{")
-
-    for error in errors:
-        writer.write_line("case {}: // {}".format(error.index, error.full_name()))
-        writer.increase_indent()
-        writer.write_line("return \"{}\";".format(error.full_name()))
-        writer.decrease_indent()
-    
-    writer.write_line("default:")
-    writer.increase_indent()
-    writer.write_line("assert(0);")
+    writer.write_line("return error_strings[error];")
     writer.decrease_indent()
     writer.write_line("}")
-    writer.decrease_indent()
-    writer.write_line("}")
+
+    writer.write_blank_line()
 
     writer.complete()
 

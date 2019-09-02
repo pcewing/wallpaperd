@@ -7,7 +7,7 @@
 /**
  * Represents the configuration options related to rotation;
  **/
-struct wpd_rotation_t;
+struct wpd_rotation_t
 {
     bool enabled;
     uint32_t frequency;
