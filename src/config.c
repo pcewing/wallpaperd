@@ -7,6 +7,7 @@
 #include <assert.h>
 
 static const struct wpd_config_t default_config = {
+    .search_path_count = 0,
     .search_paths = NULL,
     .rotation = {
         .enabled = false,
@@ -20,7 +21,8 @@ scalar(const yaml_node_t* node)
     return (const char*) node->data.scalar.value;
 }
 
-typedef wpd_error_t (*node_handler) (yaml_document_t* doc, yaml_node_t* node, struct wpd_config_t* config);
+typedef wpd_error_t (*sequence_handler) (yaml_document_t* doc, yaml_node_t* node, struct wpd_config_t* config);
+typedef wpd_error_t (*scalar_handler) (yaml_node_t* node, struct wpd_config_t* config);
 
 struct map_item_handler {
     // The name of the key node
@@ -29,13 +31,12 @@ struct map_item_handler {
     // The expected type for the value node
     yaml_node_type_t type;
 
-    // TODO: Can we union the two fields below?
-
-    // The handler function for non-mappingnodes
-    node_handler handler;
-
-    // The handler array for mapping nodes
-    const struct map_item_handler* map_handlers;
+    // The handler used to process the map item, chosen based on type
+    union {
+        sequence_handler sequence;
+        scalar_handler scalar;
+        const struct map_item_handler* mapping;
+    } handler;
 };
 
 static const struct map_item_handler*
@@ -57,6 +58,15 @@ get_handler(const struct map_item_handler* handlers, const char* key)
     for (yaml_node_item_t *itr = node->data.sequence.items.start; \
          itr < node->data.sequence.items.top; \
          itr++)
+
+#define SCALAR_HANDLER(property_name, property_handler) \
+    {property_name, YAML_SCALAR_NODE, .handler.scalar = property_handler}
+
+#define SEQUENCE_HANDLER(property_name, property_handler) \
+    {property_name, YAML_SEQUENCE_NODE, .handler.sequence = property_handler}
+
+#define MAPPING_HANDLER(property_name, property_handler) \
+    {property_name, YAML_MAPPING_NODE, .handler.mapping = property_handler}
 
 bool
 match(const char **haystack, const char *needle)
@@ -97,10 +107,8 @@ parse_bool(const char *data, bool *result)
  */
 
 static wpd_error_t
-handle_rotation_enabled(yaml_document_t* doc, yaml_node_t* node, struct wpd_config_t* config)
+handle_rotation_enabled(yaml_node_t* node, struct wpd_config_t* config)
 {
-    UNUSED(doc);
-
     bool rotation_enabled;
     wpd_error_t error = parse_bool((char *)node->data.scalar.value, &rotation_enabled);
     if (error == WPD_ERROR_SUCCESS)
@@ -109,17 +117,15 @@ handle_rotation_enabled(yaml_document_t* doc, yaml_node_t* node, struct wpd_conf
 }
 
 static wpd_error_t
-handle_rotation_frequency(yaml_document_t* doc, yaml_node_t* node, struct wpd_config_t* config)
+handle_rotation_frequency(yaml_node_t* node, struct wpd_config_t* config)
 {
-    UNUSED(doc);
-
     config->rotation.frequency = atoi((char *)node->data.scalar.value);
     return WPD_ERROR_SUCCESS;
 }
 
 const struct map_item_handler rotation_handlers[] = {
-    {"enabled", YAML_SCALAR_NODE, handle_rotation_enabled, NULL},
-    {"frequency", YAML_SCALAR_NODE, handle_rotation_frequency, NULL},
+    SCALAR_HANDLER("enabled", handle_rotation_enabled),
+    SCALAR_HANDLER("frequency", handle_rotation_frequency),
     {NULL}
 };
 
@@ -136,10 +142,13 @@ handle_search_paths(yaml_document_t* doc, yaml_node_t* node, struct wpd_config_t
         return WPD_ERROR_TODO;
     }
 
-    int search_path_count = 0;
-    SEQUENCE_FOR_EACH(node, itr) { ++search_path_count; }
+    config->search_path_count = 0;
+    SEQUENCE_FOR_EACH(node, itr) { ++config->search_path_count; }
 
-    config->search_paths = malloc(search_path_count * sizeof(char *));
+    if (config->search_path_count == 0)
+        return WPD_ERROR_SUCCESS;
+
+    config->search_paths = malloc(config->search_path_count * sizeof(char *));
 
     int i = 0;
     SEQUENCE_FOR_EACH(node, itr)
@@ -157,8 +166,8 @@ handle_search_paths(yaml_document_t* doc, yaml_node_t* node, struct wpd_config_t
 }
 
 const struct map_item_handler root_handlers[] = {
-    {"search_paths", YAML_SEQUENCE_NODE, handle_search_paths, NULL,},
-    {"rotation",     YAML_MAPPING_NODE,  NULL, rotation_handlers,},
+    SEQUENCE_HANDLER("search_paths", handle_search_paths),
+    MAPPING_HANDLER("rotation", rotation_handlers),
     {NULL}
 };
 
@@ -178,15 +187,31 @@ handle_mapping(yaml_document_t* doc, yaml_node_t* node, const struct map_item_ha
         if (!h)
             return WPD_ERROR_TODO;
         assert(value->type == h->type);
-        if (h->map_handlers) {
-            assert(h->handler == NULL);
-            assert(h->type == YAML_MAPPING_NODE);
-            if (handle_mapping(doc, value, h->map_handlers, config) != WPD_ERROR_SUCCESS)
-                return WPD_ERROR_TODO;
-        } else {
-            if (h->handler(doc, value, config) != WPD_ERROR_SUCCESS)
-                return WPD_ERROR_TODO;
-        }
+
+        switch (h->type)
+        {
+            case YAML_MAPPING_NODE:
+                assert(h->handler.mapping);
+                if (handle_mapping(doc, value, h->handler.mapping, config) != WPD_ERROR_SUCCESS)
+                    return WPD_ERROR_TODO;
+                break;
+
+            case YAML_SEQUENCE_NODE:
+                assert(h->handler.sequence);
+                if (h->handler.sequence(doc, value, config) != WPD_ERROR_SUCCESS)
+                    return WPD_ERROR_TODO;
+                break;
+
+            case YAML_SCALAR_NODE:
+                assert(h->handler.scalar);
+                if (h->handler.scalar(value, config) != WPD_ERROR_SUCCESS)
+                    return WPD_ERROR_TODO;
+                break;
+
+            default:
+                LOGWARN("Unknown handler type encountered in handle_mapping");
+                break;
+        };
     }
 
     return WPD_ERROR_SUCCESS;
@@ -198,7 +223,6 @@ load_yaml(const char *path, yaml_document_t* doc)
     yaml_parser_t parser;
     wpd_error_t error = WPD_ERROR_SUCCESS;
 
-    // TODO: Maybe open the file before this function is even called?
     FILE *input = fopen(path, "rb");
     if (!input)
         return WPD_ERROR_TODO;
@@ -233,7 +257,7 @@ parse_config(const char * path, struct wpd_config_t **config)
     handle_mapping(&doc, yaml_document_get_root_node(&doc), root_handlers, *config);
 
 done:
-    // TODO: Destroy the document?
+    yaml_document_delete(&doc);
     return error;
 }
 
@@ -276,16 +300,30 @@ load_config(struct wpd_config_t** config)
         return error;
 
     free(config_path);
-    // TODO: Switch this back
-    return WPD_ERROR_TODO;
-    //return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_SUCCESS;
 }
 
 wpd_error_t
 destroy_config(struct wpd_config_t** config)
 {
     UNUSED(config);
-    // TODO
+
+    assert(config);
+
+    if ((*config)->search_path_count > 0)
+    {
+        for (uint32_t i = 0; i < (*config)->search_path_count; ++i)
+        {
+            free((*config)->search_paths[i]);
+            (*config)->search_paths[i] = NULL;
+        }
+
+        free((*config)->search_paths);
+        (*config)->search_paths = NULL;
+    }
+
+    free(*config);
+    (*config) = NULL;
 
     return WPD_ERROR_SUCCESS;
 }

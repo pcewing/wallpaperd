@@ -135,6 +135,9 @@ get_wallpapers(const struct wpd_db_t  *db,
        struct wpd_wallpaper_result_set_t **result_set)
 {
     int wallpaper_count = get_wallpaper_count(db);
+
+    // TODO: This could be a legitimate error if the configured search paths
+    // didn't turn up any wallpapers.
     assert(wallpaper_count > 0);
 
     struct wpd_wallpaper_entity_t *wallpapers = malloc(
@@ -169,6 +172,9 @@ get_wallpapers_by_dimensions(const struct wpd_db_t *db, int width, int height,
        struct wpd_wallpaper_result_set_t **result_set)
 {
     int wallpaper_count = get_wallpaper_by_dimensions_count(db, width, height);
+
+    // TODO: This could be a legitimate error if the configured search paths
+    // didn't turn up any wallpapers.
     assert(wallpaper_count > 0);
 
     struct wpd_wallpaper_entity_t *wallpapers = malloc(

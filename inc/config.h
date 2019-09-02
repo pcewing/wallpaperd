@@ -12,13 +12,17 @@ struct wpd_rotation_t
 
 struct wpd_config_t
 {
-    const char **search_paths;
+    uint32_t search_path_count;
+    char **search_paths;
     struct wpd_rotation_t rotation;
 };
 
 wpd_error_t
 load_config(
     struct wpd_config_t** config);
+
+wpd_error_t
+destroy_config(struct wpd_config_t** config);
 
 #endif // CONFIG_H
 

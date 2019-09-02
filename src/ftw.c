@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <wordexp.h>
 
 #include "core.h"
 #include "log.h"
@@ -151,21 +152,29 @@ wpd_ftw(const struct wpd_db_t* db, const char *path)
     DIR           *dirp;
     char          *full_path;
 
-    full_path = malloc(PATH_MAX);
-    assert(realpath(path, full_path));
+    wordexp_t p;
+    wordexp(path, &p, 0);
 
-    dirp = opendir(full_path);
-    assert(dirp);
-
-    while ((entry = readdir(dirp)))
+    for (size_t i = 0; i < p.we_wordc; ++i)
     {
-        wpd_error_t wpd_error = process_directory_entry(db, path, entry);
-        if (wpd_error != WPD_ERROR_SUCCESS)
-            return wpd_error;
+        full_path = malloc(PATH_MAX);
+        assert(realpath(p.we_wordv[i], full_path));
+
+        dirp = opendir(full_path);
+        assert(dirp);
+
+        while ((entry = readdir(dirp)))
+        {
+            wpd_error_t wpd_error = process_directory_entry(db, full_path, entry);
+            if (wpd_error != WPD_ERROR_SUCCESS)
+                return wpd_error;
+        }
+
+        closedir(dirp);
+        free(full_path);
     }
 
-    closedir(dirp);
-    free(full_path);
+    wordfree(&p); 
 
     return WPD_ERROR_SUCCESS;
 }

@@ -25,9 +25,9 @@ xcb_generic_error_to_json(const xcb_generic_error_t *error)
         "  \"full_sequence\": %u,\n"
         "}\n";
 
-    int length = snprintf(NULL, 0, fmt, error->response_type, error->error_code,
-            error->sequence, error->resource_id, error->minor_code,
-            error->major_code, error->full_sequence);
+    int length = 1 + snprintf(NULL, 0, fmt, error->response_type,
+            error->error_code, error->sequence, error->resource_id,
+            error->minor_code, error->major_code, error->full_sequence);
 
     char * result = malloc(length * sizeof(char));
     if (result)
@@ -43,20 +43,19 @@ xcb_generic_error_to_json(const xcb_generic_error_t *error)
 char *
 xcb_get_geometry_reply_to_json(const xcb_get_geometry_reply_t *geometry)
 {
-    const char * fmt = "{\n"
-            "  \"response_type\": %u,\n"
-            "  \"depth\": %u,\n"
-            "  \"sequence\": %u,\n"
-            "  \"length\": %u,\n"
-            "  \"root\": %u,\n"
-            "  \"x\": %u,\n"
-            "  \"y\": %u,\n"
-            "  \"width\": %u,\n"
-            "  \"height\": %u,\n"
-            "  \"border_width\": %u\n"
-            "}\n";
+    const char * fmt = "{"
+            " \"response_type\": %u,"
+            " \"depth\": %u,"
+            " \"sequence\": %u,"
+            " \"length\": %u,"
+            " \"root\": %u,"
+            " \"x\": %u,"
+            " \"y\": %u,"
+            " \"width\": %u,"
+            " \"height\": %u,"
+            " \"border_width\": %u }";
 
-    int length = snprintf(NULL, 0, fmt, geometry->response_type,
+    int length = 1 + snprintf(NULL, 0, fmt, geometry->response_type,
             geometry->depth, geometry->sequence, geometry->length,
             geometry->root, geometry->x, geometry->y, geometry->width,
             geometry->height, geometry->border_width);
@@ -77,28 +76,26 @@ xcb_get_geometry_reply_to_json(const xcb_get_geometry_reply_t *geometry)
 void
 print_error(const xcb_generic_error_t *error)
 {
-    if (error)
+    assert(error);
+
+    char * json = xcb_generic_error_to_json(error);
+    if (json)
     {
-        char * json = xcb_generic_error_to_json(error);
-        if (json)
-        {
-            LOGINFO("Error: %s", json);
-            free(json);
-        }
+        LOGINFO("Error: %s", json);
+        free(json);
     }
 }
 
 void
 print_geometry(const xcb_get_geometry_reply_t *geometry)
 {
-    if (geometry)
+    assert(geometry);
+
+    char * json = xcb_get_geometry_reply_to_json(geometry);
+    if (json)
     {
-        char * json = xcb_get_geometry_reply_to_json(geometry);
-        if (json)
-        {
-            LOGINFO("Geometry: %s", json);
-            free(json);
-        }
+        LOGINFO("Geometry: %s", json);
+        free(json);
     }
 }
 
