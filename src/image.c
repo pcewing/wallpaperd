@@ -18,7 +18,7 @@ wpd_get_image(const char* path, struct wpd_image_t** result)
     if (!data)
     {
         LOGERROR("STBI_LOAD failure");
-        return WPD_ERROR_STBI_IMAGE_LOAD_FAILURE;
+        return WPD_ERROR_IMAGE_STBI_LOAD_FAILURE;
     }
 
     image = malloc(sizeof(struct wpd_image_t));
@@ -29,7 +29,7 @@ wpd_get_image(const char* path, struct wpd_image_t** result)
     image->data = data;
     
     *result = image;
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 //------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ wpd_free_image(struct wpd_image_t** image)
 {
     if (!image || !(*image))
     {
-        return WPD_ERROR_NULL_PARAM;
+        return WPD_ERROR_GLOBAL_NULL_PARAM;
     }
 
     if ((*image)->data)
@@ -49,7 +49,7 @@ wpd_free_image(struct wpd_image_t** image)
     free(*image);
     image = NULL;
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 //------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ wpd_get_image_metadata(
     image_metadata->height = height;
 
     *result = image_metadata;
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 //------------------------------------------------------------------------------
@@ -77,12 +77,12 @@ wpd_free_image_metadata(struct wpd_image_metadata_t** image_metadata)
 {
     if (!image_metadata || !(*image_metadata))
     {
-        return WPD_ERROR_NULL_PARAM;
+        return WPD_ERROR_GLOBAL_NULL_PARAM;
     }
 
     free(*image_metadata);
     image_metadata = NULL;
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 

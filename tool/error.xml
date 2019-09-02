@@ -1,24 +1,34 @@
-<Errors>
-    <Error name="SUCCESS" />
-    <Error name="FAILURE" />
-
-    <Error name="XCB_GET_GEOMETRY_FAILED" />
-
-    <Error name="UNKNOWN_FILENAME" />
-    <Error name="UNKNOWN_EXTENSION" />
-    <Error name="NULL_PARAM" />
-    <Error name="TODO" />
-    <Error name="NO_COMPATIBLE_IMAGE" />
-
-    <Error name="STBI_IMAGE_LOAD_FAILURE" />
-
-    <Error name="DATABASE_OPEN_FAILURE" />
-    <Error name="DATABASE_TABLE_CREATION_FAILURE" />
-
-    <Error name="PARSE_FAILURE" />
-    <Error name="DUPLICATE_CONFIG_DEFINITION" />
-    <Error name="MISSING_YAML_MAP_ITEM_HANDLER" />
-    <Error name="FILE_OPEN_FAILURE" />
-    <Error name="YAML_PARSER_LOAD_FAILURE" />
-    <Error name="HOME_PATH_UNDEFINED" />
-</Errors>
+<ErrorCategories>
+    <ErrorCategory name="GLOBAL">
+        <Error name="SUCCESS" />
+        <Error name="FAILURE" />
+        <Error name="NULL_PARAM" />
+    </ErrorCategory>
+    <ErrorCategory name="XCB">
+        <Error name="GET_GEOMETRY_FAILED" />
+    </ErrorCategory>
+    <ErrorCategory name="FTW">
+        <Error name="UNKNOWN_EXTENSION" />
+    </ErrorCategory>
+    <ErrorCategory name="IMAGE">
+        <Error name="STBI_LOAD_FAILURE" />
+    </ErrorCategory>
+    <ErrorCategory name="DATA">
+        <Error name="SQLITE_OPEN_FAILURE" />
+        <Error name="TABLE_CREATION_FAILURE" />
+    </ErrorCategory>
+    <ErrorCategory name="PARSE">
+        <Error name="BOOL_INVALID" />
+        <Error name="U32_NOT_A_DECIMAL" />
+        <Error name="U32_TRAILING_CHARS" />
+        <Error name="U32_STRTOULL_OUT_OF_RANGE" />
+        <Error name="U32_OVERFLOW" />
+    </ErrorCategory>
+    <ErrorCategory name="CONFIG">
+        <Error name="DUPLICATE_FIELD_DEFINITION" />
+        <Error name="MISSING_YAML_MAP_ITEM_HANDLER" />
+        <Error name="FILE_OPEN_FAILURE" />
+        <Error name="YAML_PARSER_LOAD_FAILURE" />
+        <Error name="HOME_PATH_UNDEFINED" />
+    </ErrorCategory>
+</ErrorCategories>

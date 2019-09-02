@@ -32,6 +32,9 @@ config.o: build_dir
 log.o: build_dir
 	gcc -c -o build/log.o $(CFLAGS_BASE) $(SRC)/log.c
 
+parse.o: build_dir
+	gcc -c -o build/parse.o $(CFLAGS_BASE) $(SRC)/parse.c
+
 core.o: build_dir
 	gcc -c -o build/core.o $(CFLAGS_BASE) $(SRC)/core.c
 
@@ -47,7 +50,7 @@ wallpaper.o: build_dir
 data.o: build_dir
 	gcc -c -o build/data.o $(CFLAGS_BASE) $(SRC)/data.c
 
-wallpaperd: build_dir ftw.o log.o core.o wallpaper.o image.o data.o config.o error.o
+wallpaperd: build_dir ftw.o log.o core.o wallpaper.o image.o data.o config.o error.o parse.o
 	cc -o build/wallpaperd $(SRC)/main.c build/*.o $(CFLAGS) $(LDFLAGS)
 
 clean:

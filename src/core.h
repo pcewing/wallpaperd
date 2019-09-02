@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "error.g.h"
 

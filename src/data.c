@@ -35,18 +35,18 @@ initialize_database(struct wpd_db_t** result)
     {
         LOGERROR("Can't open database: %s\n", sqlite3_errmsg(db->handle));
         sqlite3_close(db->handle);
-        return WPD_ERROR_DATABASE_OPEN_FAILURE;
+        return WPD_ERROR_DATA_SQLITE_OPEN_FAILURE;
     }
 
     wpd_error_t error = create_tables(db->handle);
-    if (error != WPD_ERROR_SUCCESS)
+    if (error != WPD_ERROR_GLOBAL_SUCCESS)
     {
         sqlite3_close(db->handle);
         return error;
     }
 
     *result = db;
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -164,7 +164,7 @@ get_wallpapers(const struct wpd_db_t  *db,
     (*result_set)->results = wallpapers;
     (*result_set)->count = wallpaper_count;
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -209,7 +209,7 @@ get_wallpapers_by_dimensions(const struct wpd_db_t *db, int width, int height,
     (*result_set)->results = wallpapers;
     (*result_set)->count = wallpaper_count;
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -221,7 +221,7 @@ cleanup_database(struct wpd_db_t** db)
     sqlite3_close((*db)->handle);
     free(*db);
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 //
@@ -235,10 +235,10 @@ create_tables(sqlite3 *db)
     if (rc)
     {
         sqlite3_close(db);
-        return WPD_ERROR_DATABASE_TABLE_CREATION_FAILURE;
+        return WPD_ERROR_DATA_TABLE_CREATION_FAILURE;
     }
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 int

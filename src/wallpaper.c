@@ -126,7 +126,7 @@ select_random_wallpaper(const struct wpd_db_t *db, int width, int height,
     free(wallpapers);
 
     *result = image_path;
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 /*
@@ -242,7 +242,7 @@ wpd_xcb_image_put_chunked(
         row_index += row_count;
     }
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 xcb_pixmap_t
@@ -387,7 +387,7 @@ wpd_set_wallpaper(
     xcb_generic_error_t *error;
     
     wpd_error_t wpd_error = wpd_get_image(image_path, &image);
-    if (wpd_error != WPD_ERROR_SUCCESS)
+    if (wpd_error != WPD_ERROR_GLOBAL_SUCCESS)
     {
         return wpd_error;
     }
@@ -427,7 +427,7 @@ wpd_set_wallpaper(
 
     wpd_free_image(&image);
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -461,7 +461,7 @@ wpd_set_wallpaper_for_screen(
     char *image_path = NULL;
     wpd_error_t wpd_error = select_random_wallpaper(db, geometry->width,
             geometry->height, &image_path);
-    if (wpd_error != WPD_ERROR_SUCCESS)
+    if (wpd_error != WPD_ERROR_GLOBAL_SUCCESS)
     {
         return wpd_error;
     }
@@ -472,7 +472,7 @@ wpd_set_wallpaper_for_screen(
     free(geometry);
     free(image_path);
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -494,6 +494,6 @@ wpd_set_wallpapers(
 
     xcb_disconnect(connection);
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 

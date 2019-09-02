@@ -1,5 +1,6 @@
 #include "config.h"
 #include "log.h"
+#include "parse.h"
 
 #include <yaml.h>
 #include <stdlib.h>
@@ -68,40 +69,6 @@ get_handler(const struct map_item_handler* handlers, const char* key)
 #define MAPPING_HANDLER(property_name, property_handler) \
     {property_name, YAML_MAPPING_NODE, .data.mapping = property_handler}
 
-bool
-match(const char **haystack, const char *needle)
-{
-    for (int i = 0; haystack[i]; i++)
-    {
-        if (strcmp(needle, haystack[i]) == 0)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-wpd_error_t
-parse_bool(const char *data, bool *result)
-{
-    static const char *t[] = { "true", "on", "yes", "y", NULL };
-    static const char *f[] = { "false", "off", "no", "n", NULL };
-
-    char *lower = wpd_strdup_lower(data);
-
-    wpd_error_t error = WPD_ERROR_SUCCESS;
-
-    if (match(t, lower))
-        *result = true;
-    else if (match(f, lower))
-        *result = false;
-    else
-        error = WPD_ERROR_PARSE_FAILURE;
-
-    free(lower);
-    return error;
-}
-
 /*
  * Rotation Config Handlers
  */
@@ -110,8 +77,9 @@ static wpd_error_t
 handle_rotation_enabled(yaml_node_t* node, struct wpd_config_t* config)
 {
     bool rotation_enabled;
-    wpd_error_t error = parse_bool((char *)node->data.scalar.value, &rotation_enabled);
-    if (error == WPD_ERROR_SUCCESS)
+    wpd_error_t error = parse_bool((char *)node->data.scalar.value,
+            &rotation_enabled);
+    if (error == WPD_ERROR_GLOBAL_SUCCESS)
         config->rotation.enabled = rotation_enabled;
     return error;
 }
@@ -119,8 +87,12 @@ handle_rotation_enabled(yaml_node_t* node, struct wpd_config_t* config)
 static wpd_error_t
 handle_rotation_frequency(yaml_node_t* node, struct wpd_config_t* config)
 {
-    config->rotation.frequency = atoi((char *)node->data.scalar.value);
-    return WPD_ERROR_SUCCESS;
+    uint32_t rotation_frequency;
+    wpd_error_t error = parse_uint32((char *)node->data.scalar.value,
+            &rotation_frequency);
+    if (error == WPD_ERROR_GLOBAL_SUCCESS)
+        config->rotation.frequency = rotation_frequency;
+    return error;
 }
 
 const struct map_item_handler rotation_handlers[] = {
@@ -139,14 +111,14 @@ handle_search_paths(yaml_document_t* doc, yaml_node_t* node, struct wpd_config_t
     if (config->search_paths != NULL)
     {
         LOGERROR("Duplicate definition of search_paths in config");
-        return WPD_ERROR_DUPLICATE_CONFIG_DEFINITION;
+        return WPD_ERROR_CONFIG_DUPLICATE_FIELD_DEFINITION;
     }
 
     config->search_path_count = 0;
     SEQUENCE_FOR_EACH(node, itr) { ++config->search_path_count; }
 
     if (config->search_path_count == 0)
-        return WPD_ERROR_SUCCESS;
+        return WPD_ERROR_GLOBAL_SUCCESS;
 
     config->search_paths = malloc(config->search_path_count * sizeof(char *));
 
@@ -162,7 +134,7 @@ handle_search_paths(yaml_document_t* doc, yaml_node_t* node, struct wpd_config_t
         config->search_paths[i++] = path;
     }
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 const struct map_item_handler root_handlers[] = {
@@ -185,7 +157,7 @@ handle_mapping(yaml_document_t* doc, yaml_node_t* node, const struct map_item_ha
         assert(key->type == YAML_SCALAR_NODE);
         const struct map_item_handler *handler = get_handler(handlers, scalar(key));
         if (!handler)
-            return WPD_ERROR_MISSING_YAML_MAP_ITEM_HANDLER;
+            return WPD_ERROR_CONFIG_MISSING_YAML_MAP_ITEM_HANDLER;
         assert(value->type == handler->type);
 
         wpd_error_t error;
@@ -194,21 +166,21 @@ handle_mapping(yaml_document_t* doc, yaml_node_t* node, const struct map_item_ha
             case YAML_MAPPING_NODE:
                 assert(handler->data.mapping);
                 error = handle_mapping(doc, value, handler->data.mapping, config);
-                if (error != WPD_ERROR_SUCCESS)
+                if (error != WPD_ERROR_GLOBAL_SUCCESS)
                     return error;
                 break;
 
             case YAML_SEQUENCE_NODE:
                 assert(handler->data.sequence);
                 error = handler->data.sequence(doc, value, config);
-                if (error != WPD_ERROR_SUCCESS)
+                if (error != WPD_ERROR_GLOBAL_SUCCESS)
                     return error;
                 break;
 
             case YAML_SCALAR_NODE:
                 assert(handler->data.scalar);
                 error = handler->data.scalar(value, config);
-                if (error != WPD_ERROR_SUCCESS)
+                if (error != WPD_ERROR_GLOBAL_SUCCESS)
                     return error;
                 break;
 
@@ -218,7 +190,7 @@ handle_mapping(yaml_document_t* doc, yaml_node_t* node, const struct map_item_ha
         };
     }
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -226,15 +198,15 @@ load_yaml(const char *path, yaml_document_t* doc)
 {
     FILE *input = fopen(path, "rb");
     if (!input)
-        return WPD_ERROR_FILE_OPEN_FAILURE;
+        return WPD_ERROR_CONFIG_FILE_OPEN_FAILURE;
 
     yaml_parser_t parser;
     yaml_parser_initialize(&parser);
     yaml_parser_set_input_file(&parser, input);
 
-    wpd_error_t error = WPD_ERROR_SUCCESS;
+    wpd_error_t error = WPD_ERROR_GLOBAL_SUCCESS;
     if (!yaml_parser_load(&parser, doc)) {
-        error = WPD_ERROR_YAML_PARSER_LOAD_FAILURE;
+        error = WPD_ERROR_CONFIG_YAML_PARSER_LOAD_FAILURE;
     }
 
     fclose(input);
@@ -244,11 +216,11 @@ load_yaml(const char *path, yaml_document_t* doc)
 wpd_error_t
 parse_config(const char * path, struct wpd_config_t **config)
 {
-    wpd_error_t error = WPD_ERROR_SUCCESS;
+    wpd_error_t error = WPD_ERROR_GLOBAL_SUCCESS;
     yaml_document_t doc;
 
     error = load_yaml(path, &doc);
-    if (error != WPD_ERROR_SUCCESS)
+    if (error != WPD_ERROR_GLOBAL_SUCCESS)
     {
         yaml_document_delete(&doc);
         return error;
@@ -278,7 +250,7 @@ locate_config(char **config_path)
         // Fall back to $HOME/.config
         char *home = getenv("HOME");
         if (!home)
-            return WPD_ERROR_HOME_PATH_UNDEFINED;
+            return WPD_ERROR_CONFIG_HOME_PATH_UNDEFINED;
 
         config_dir = wpd_path_join(home, ".config/wallpaperd");
     }
@@ -286,7 +258,7 @@ locate_config(char **config_path)
     (*config_path) = wpd_path_join(config_dir, "config.yaml");
 
     free(config_dir);
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -294,15 +266,15 @@ load_config(struct wpd_config_t** config)
 {
     char *config_path = NULL;
     wpd_error_t error = locate_config(&config_path);
-    if (error != WPD_ERROR_SUCCESS)
+    if (error != WPD_ERROR_GLOBAL_SUCCESS)
         return error;
 
     error = parse_config(config_path, config);
-    if (error != WPD_ERROR_SUCCESS)
+    if (error != WPD_ERROR_GLOBAL_SUCCESS)
         return error;
 
     free(config_path);
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -327,5 +299,5 @@ destroy_config(struct wpd_config_t** config)
     free(*config);
     (*config) = NULL;
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }

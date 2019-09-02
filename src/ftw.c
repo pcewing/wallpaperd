@@ -61,7 +61,7 @@ process_directory(const struct wpd_db_t *db, const char *path, struct dirent *en
     // Recursively walk directories
     wpd_ftw(db, path);
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -74,7 +74,7 @@ process_regular_file(const struct wpd_db_t *db, const char *path, struct dirent 
     extension = wpd_get_extension(entry->d_name);
     if (!extension)
     {
-        return WPD_ERROR_UNKNOWN_EXTENSION;
+        return WPD_ERROR_FTW_UNKNOWN_EXTENSION;
     }
 
     if (is_extension_supported(extension))
@@ -95,7 +95,7 @@ process_regular_file(const struct wpd_db_t *db, const char *path, struct dirent 
         wpd_free_image_metadata(&image_metadata);
     }
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -109,7 +109,7 @@ process_directory_entry(
     // Ignore the current and parent directory entries
     if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
     {
-        return WPD_ERROR_SUCCESS;
+        return WPD_ERROR_GLOBAL_SUCCESS;
     }
 
     full_path = wpd_path_join(parent_dir, entry->d_name);
@@ -119,7 +119,7 @@ process_directory_entry(
     case TYPE: \
     { \
         wpd_error_t error = PROCESSOR(db, full_path, entry); \
-        if (error != WPD_ERROR_SUCCESS) { return error; } \
+        if (error != WPD_ERROR_GLOBAL_SUCCESS) { return error; } \
         break; \
     }
     
@@ -142,7 +142,7 @@ process_directory_entry(
 
     free(full_path);
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 wpd_error_t
@@ -166,7 +166,7 @@ wpd_ftw(const struct wpd_db_t* db, const char *path)
         while ((entry = readdir(dirp)))
         {
             wpd_error_t wpd_error = process_directory_entry(db, full_path, entry);
-            if (wpd_error != WPD_ERROR_SUCCESS)
+            if (wpd_error != WPD_ERROR_GLOBAL_SUCCESS)
                 return wpd_error;
         }
 
@@ -176,6 +176,6 @@ wpd_ftw(const struct wpd_db_t* db, const char *path)
 
     wordfree(&p); 
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 

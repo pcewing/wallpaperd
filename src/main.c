@@ -15,18 +15,18 @@ wpd_main_loop(struct wpd_config_t *config)
 
     struct wpd_db_t *db;
     wpd_error_t error = initialize_database(&db);
-    if (error != WPD_ERROR_SUCCESS)
+    if (error != WPD_ERROR_GLOBAL_SUCCESS)
         return error;
 
     for (uint32_t i = 0; i < config->search_path_count; ++i)
     {
         error = wpd_ftw(db, config->search_paths[i]);
-        if (error != WPD_ERROR_SUCCESS)
+        if (error != WPD_ERROR_GLOBAL_SUCCESS)
             return error;
     }
 
     error = wpd_set_wallpapers(db);
-    if (error != WPD_ERROR_SUCCESS)
+    if (error != WPD_ERROR_GLOBAL_SUCCESS)
         return error;
 
     while (config->rotation.enabled)
@@ -34,7 +34,7 @@ wpd_main_loop(struct wpd_config_t *config)
         wpd_sleep(config->rotation.frequency);
 
         error = wpd_set_wallpapers(db);
-        if (error != WPD_ERROR_SUCCESS)
+        if (error != WPD_ERROR_GLOBAL_SUCCESS)
             return error;
     }
 
@@ -44,7 +44,7 @@ wpd_main_loop(struct wpd_config_t *config)
         return error;
     }
 
-    return WPD_ERROR_SUCCESS;
+    return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
 int
@@ -55,14 +55,14 @@ main(int argc, char *argv[])
 
     struct wpd_config_t* config;
     wpd_error_t error = load_config(&config);
-    if (error != WPD_ERROR_SUCCESS)
+    if (error != WPD_ERROR_GLOBAL_SUCCESS)
     {
         LOGERROR("Failed to load config file: %s\n", wpd_error_str(error));
         wpd_exit(error);
     }
     
     error = wpd_main_loop(config);
-    if (error != WPD_ERROR_SUCCESS)
+    if (error != WPD_ERROR_GLOBAL_SUCCESS)
     {
         LOGERROR("Unhandled error encountered: %s\n", wpd_error_str(error));
         wpd_exit(error);
@@ -70,6 +70,6 @@ main(int argc, char *argv[])
 
     destroy_config(&config);
 
-    wpd_exit(WPD_ERROR_SUCCESS);
+    wpd_exit(WPD_ERROR_GLOBAL_SUCCESS);
 }
 
