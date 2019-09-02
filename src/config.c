@@ -36,7 +36,7 @@ struct map_item_handler {
         sequence_handler sequence;
         scalar_handler scalar;
         const struct map_item_handler* mapping;
-    } handler;
+    } data;
 };
 
 static const struct map_item_handler*
@@ -60,13 +60,13 @@ get_handler(const struct map_item_handler* handlers, const char* key)
          itr++)
 
 #define SCALAR_HANDLER(property_name, property_handler) \
-    {property_name, YAML_SCALAR_NODE, .handler.scalar = property_handler}
+    {property_name, YAML_SCALAR_NODE, .data.scalar = property_handler}
 
 #define SEQUENCE_HANDLER(property_name, property_handler) \
-    {property_name, YAML_SEQUENCE_NODE, .handler.sequence = property_handler}
+    {property_name, YAML_SEQUENCE_NODE, .data.sequence = property_handler}
 
 #define MAPPING_HANDLER(property_name, property_handler) \
-    {property_name, YAML_MAPPING_NODE, .handler.mapping = property_handler}
+    {property_name, YAML_MAPPING_NODE, .data.mapping = property_handler}
 
 bool
 match(const char **haystack, const char *needle)
@@ -183,29 +183,33 @@ handle_mapping(yaml_document_t* doc, yaml_node_t* node, const struct map_item_ha
 
         // All keys should be scalars
         assert(key->type == YAML_SCALAR_NODE);
-        const struct map_item_handler *h = get_handler(handlers, scalar(key));
-        if (!h)
+        const struct map_item_handler *handler = get_handler(handlers, scalar(key));
+        if (!handler)
             return WPD_ERROR_TODO;
-        assert(value->type == h->type);
+        assert(value->type == handler->type);
 
-        switch (h->type)
+        wpd_error_t error;
+        switch (handler->type)
         {
             case YAML_MAPPING_NODE:
-                assert(h->handler.mapping);
-                if (handle_mapping(doc, value, h->handler.mapping, config) != WPD_ERROR_SUCCESS)
-                    return WPD_ERROR_TODO;
+                assert(handler->data.mapping);
+                error = handle_mapping(doc, value, handler->data.mapping, config);
+                if (error != WPD_ERROR_SUCCESS)
+                    return error;
                 break;
 
             case YAML_SEQUENCE_NODE:
-                assert(h->handler.sequence);
-                if (h->handler.sequence(doc, value, config) != WPD_ERROR_SUCCESS)
-                    return WPD_ERROR_TODO;
+                assert(handler->data.sequence);
+                error = handler->data.sequence(doc, value, config);
+                if (error != WPD_ERROR_SUCCESS)
+                    return error;
                 break;
 
             case YAML_SCALAR_NODE:
-                assert(h->handler.scalar);
-                if (h->handler.scalar(value, config) != WPD_ERROR_SUCCESS)
-                    return WPD_ERROR_TODO;
+                assert(handler->data.scalar);
+                error = handler->data.scalar(value, config);
+                if (error != WPD_ERROR_SUCCESS)
+                    return error;
                 break;
 
             default:
@@ -220,21 +224,19 @@ handle_mapping(yaml_document_t* doc, yaml_node_t* node, const struct map_item_ha
 wpd_error_t
 load_yaml(const char *path, yaml_document_t* doc)
 {
-    yaml_parser_t parser;
-    wpd_error_t error = WPD_ERROR_SUCCESS;
-
     FILE *input = fopen(path, "rb");
     if (!input)
         return WPD_ERROR_TODO;
 
+    yaml_parser_t parser;
     yaml_parser_initialize(&parser);
     yaml_parser_set_input_file(&parser, input);
+
+    wpd_error_t error = WPD_ERROR_SUCCESS;
     if (!yaml_parser_load(&parser, doc)) {
         error = WPD_ERROR_TODO;
-        goto failure;
     }
 
-failure:
     fclose(input);
     return error;
 }
@@ -248,7 +250,8 @@ parse_config(const char * path, struct wpd_config_t **config)
     error = load_yaml(path, &doc);
     if (error != WPD_ERROR_SUCCESS)
     {
-        goto done;
+        yaml_document_delete(&doc);
+        return error;
     }
 
     (*config) = memcpy(malloc(sizeof(struct wpd_config_t)), &default_config,
@@ -256,7 +259,6 @@ parse_config(const char * path, struct wpd_config_t **config)
 
     handle_mapping(&doc, yaml_document_get_root_node(&doc), root_handlers, *config);
 
-done:
     yaml_document_delete(&doc);
     return error;
 }
