@@ -3,12 +3,18 @@
 
 #include "core.h"
 
+/**
+ * Represents the metadata associated with an image.
+ **/
 struct wpd_image_metadata_t
 {
     unsigned int width;
     unsigned int height;
 };
 
+/**
+ * Represents an image.
+ **/
 struct wpd_image_t
 {
     unsigned int width;
@@ -19,7 +25,10 @@ struct wpd_image_t
 };
 
 /**
- * TODO: Documentation
+ * Reads image data from a specified path.
+ *
+ * Note: The resulting image needs to be manually destroyed by the caller via
+ * wpd_free_image().
  **/
 wpd_error_t
 wpd_get_image(
@@ -27,14 +36,17 @@ wpd_get_image(
     struct wpd_image_t** result);
 
 /**
- * TODO: Documentation
+ * Frees all resources associated with an image object.
  **/
 wpd_error_t
 wpd_free_image(
     struct wpd_image_t** image);
 
 /**
- * TODO: Documentation
+ * Reads image metadata from a specified path.
+ *
+ * Note: The resulting image needs to be manually destroyed by the caller via
+ * wpd_free_image_metadata().
  **/
 wpd_error_t
 wpd_get_image_metadata(
@@ -42,7 +54,7 @@ wpd_get_image_metadata(
     struct wpd_image_metadata_t **result);
 
 /**
- * TODO: Documentation
+ * Frees all resources associated with an image metadata object.
  **/
 wpd_error_t
 wpd_free_image_metadata(

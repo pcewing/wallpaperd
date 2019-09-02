@@ -17,7 +17,7 @@ const char* error_strings[] = {
     "WPD_ERROR_TODO"
 };
 
-void wpd_exit(int exit_code)
+void wpd_exit(wpd_error_t exit_code)
 {
     exit(exit_code);
 }
@@ -29,9 +29,9 @@ wpd_error_str(wpd_error_t error)
 }
 
 char*
-wpd_get_extension(const char *filename)
+wpd_get_extension(const char *path)
 {
-    char *temp = strrchr(filename, '.');
+    char *temp = strrchr(path, '.');
     return (temp) ? temp + 1 : NULL;
 }
 

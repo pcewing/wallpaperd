@@ -7,7 +7,8 @@
 #define MAX_NODES 16384
 
 /**
- * TODO: Document this.
+ * Recursively traverses the path provided and inserts any image files found
+ * into the database. Environment variables in the path will are expanded.
  **/
 wpd_error_t
 wpd_ftw(

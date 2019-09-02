@@ -5,7 +5,9 @@
 #include "data.h"
 
 /**
- * TODO: Document what this function does
+ * Iterates through each screen, calculates the screen dimensions, selects a
+ * random wallpaper from the database with matching dimensions, and sets the
+ * wallpaper.
  **/
 wpd_error_t
 wpd_set_wallpapers(
