@@ -14,6 +14,7 @@ desktop environments.
 
 - xcb
 - sqlite3
+- yaml
 - stb\_image\*
 
 \*This is a single header library and is checked directly into the source tree

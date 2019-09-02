@@ -10,8 +10,6 @@
 #include "ftw.h"
 #include "image.h"
 
-#define PATH_SEPARATOR "/"
-
 const char*
 type_str(unsigned char type)
 {
@@ -33,19 +31,6 @@ type_str(unsigned char type)
     };
 
     return retval;
-}
-
-char*
-path_join(const char *a, const char *b)
-{
-    char *result;
-    size_t len;
-
-    len = strlen(a) + strlen(PATH_SEPARATOR) + strlen(b) + 1;
-    result = malloc(len);
-    snprintf(result, len, "%s%s%s", a, PATH_SEPARATOR, b);
-
-    return result;
 }
 
 bool
@@ -126,7 +111,7 @@ process_directory_entry(
         return WPD_ERROR_SUCCESS;
     }
 
-    full_path = path_join(parent_dir, entry->d_name);
+    full_path = wpd_path_join(parent_dir, entry->d_name);
 
 #define WPD_FTW_CASE_NOOP(TYPE) case TYPE: break;
 #define WPD_FTW_CASE(TYPE, PROCESSOR) \

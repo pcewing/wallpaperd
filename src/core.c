@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <ctype.h>
 
 #include "core.h"
+
+#define PATH_SEPARATOR "/"
 
 const char* error_strings[] = {
     "WPD_ERROR_SUCCESS",
@@ -57,5 +60,25 @@ uint32_t
 wpd_min(uint32_t a, uint32_t b)
 {
     return (a < b) ? a : b;
+}
+
+char*
+wpd_path_join(const char *a, const char *b)
+{
+    size_t len = strlen(a) + strlen(PATH_SEPARATOR) + strlen(b) + 1;
+    char *result = malloc(len);
+    snprintf(result, len, "%s%s%s", a, PATH_SEPARATOR, b);
+
+    return result;
+}
+
+
+char*
+wpd_strdup_lower(const char *data)
+{
+    char *lower = strdup(data);
+    for (int i = 0; lower[i]; i++)
+        lower[i] = tolower(lower[i]);
+    return lower;
 }
 

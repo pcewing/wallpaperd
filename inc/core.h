@@ -43,5 +43,15 @@ wpd_rand();
 uint32_t
 wpd_min(uint32_t a, uint32_t b);
 
+// TODO: document this
+// The string returned must be manually freed by the caller
+char*
+wpd_path_join(const char *a, const char *b);
+
+// TODO: document this
+// The string returned must be manually freed by the caller
+char*
+wpd_strdup_lower(const char *data);
+
 #endif // CORE_H
 

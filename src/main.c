@@ -1,5 +1,6 @@
 #include "core.h"
 #include "log.h"
+#include "config.h"
 #include "wallpaper.h"
 #include "data.h"
 #include "ftw.h"
@@ -44,12 +45,17 @@ wpd_main_loop(const char *search_path)
 int
 main(int argc, char *argv[])
 {
-    wpd_error_t error;
-    char *search_path;
+    struct wpd_config_t* config;
+    wpd_error_t error = load_config(&config);
+    if (error != WPD_ERROR_SUCCESS)
+    {
+        LOGERROR("Failed to load config file: %s\n", wpd_error_str(error));
+        wpd_exit(error);
+    }
     
     // TODO: Switch this back
     //search_path = (argc > 1) ? argv[1] : ".";
-    search_path = (argc > 1) ? argv[1] : "/home/pewing/box/pic/Wallpapers";
+    char *search_path = (argc > 1) ? argv[1] : "/home/pewing/box/pic/Wallpapers";
 
     error = wpd_main_loop(search_path);
     if (error != WPD_ERROR_SUCCESS)
