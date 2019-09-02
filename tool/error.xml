@@ -1,0 +1,12 @@
+<Errors>
+    <Error name="SUCCESS" />
+    <Error name="FAILURE" />
+
+    <Error name="UNKNOWN_FILENAME" />
+    <Error name="UNKNOWN_EXTENSION" />
+    <Error name="NULL_PARAM" />
+    <Error name="TODO" />
+    <Error name="NO_COMPATIBLE_IMAGE" />
+
+    <Error name="DATABASE_TABLE_CREATION_FAILURE" />
+</Errors>

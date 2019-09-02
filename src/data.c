@@ -17,7 +17,7 @@ struct wpd_db_t
 // Forward declare private functions
 //
 
-int create_tables(sqlite3 *db);
+wpd_error_t create_tables(sqlite3 *db);
 int create_wallpaper_table(sqlite3 *db);
 
 //
