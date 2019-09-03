@@ -310,20 +310,20 @@ get_pixmap_property(
 {
     static const uint8_t delete = 0;
     static const uint8_t offset = 0;
-    static const uint8_t length = 0;
+    static const uint8_t length = 1;
 
-    xcb_get_property_cookie_t get_property_cookie = xcb_get_property(
+    xcb_get_property_cookie_t cookie = xcb_get_property(
             connection, delete, window, atom, XCB_ATOM_PIXMAP,
             offset, length);
 
     xcb_generic_error_t *error;
-    xcb_get_property_reply_t *get_property_reply = xcb_get_property_reply(
-            connection, get_property_cookie, &error);
+    xcb_get_property_reply_t *reply = xcb_get_property_reply(
+            connection, cookie, &error);
 
     assert(!error);
-    assert(get_property_reply);
+    assert(reply);
 
-    return get_property_reply;
+    return reply;
 }
 
 xcb_pixmap_t
@@ -334,13 +334,11 @@ get_pixmap_atom(
 {
     xcb_atom_t atom = get_atom(c, atom_name);
 
-    xcb_get_property_reply_t *pixmap_property = get_pixmap_property(c, window,
-            atom);
+    xcb_get_property_reply_t *prop = get_pixmap_property(c, window, atom);
 
-    xcb_pixmap_t pixmap_id = *((xcb_pixmap_t*) xcb_get_property_value(
-                pixmap_property));
+    xcb_pixmap_t pixmap_id = *((xcb_pixmap_t *) xcb_get_property_value(prop));
 
-    free(pixmap_property);
+    free(prop);
 
     return pixmap_id;
 }
