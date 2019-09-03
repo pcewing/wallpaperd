@@ -278,8 +278,8 @@ wpd_put_image_on_pixmap(
 }
 
 // Note: The structure returned by this method needs to be freed by the caller
-xcb_intern_atom_reply_t *
-get_intern_atom(xcb_connection_t *connection, const char *atom_name)
+xcb_atom_t
+get_atom(xcb_connection_t *connection, const char *atom_name)
 {
     static const bool only_if_exists = true;
 
@@ -287,13 +287,18 @@ get_intern_atom(xcb_connection_t *connection, const char *atom_name)
             only_if_exists, strlen(atom_name), atom_name);
 
     xcb_generic_error_t *error;
-    xcb_intern_atom_reply_t *intern_atom_reply = xcb_intern_atom_reply(
-            connection, cookie, &error);
+    xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply(connection, cookie,
+            &error);
 
+    // TODO: Do we really need to assert here?
     assert(!error);
-    assert(intern_atom_reply);
+    assert(reply);
 
-    return intern_atom_reply;
+    xcb_atom_t atom = reply->atom;
+
+    free(reply);
+
+    return atom;
 }
 
 // Note: The structure returned by this method needs to be freed by the caller
@@ -301,14 +306,14 @@ xcb_get_property_reply_t *
 get_pixmap_property(
     xcb_connection_t        *connection,
     xcb_window_t             window,
-    xcb_intern_atom_reply_t *intern_atom)
+    xcb_atom_t               atom)
 {
     static const uint8_t delete = 0;
     static const uint8_t offset = 0;
     static const uint8_t length = 0;
 
     xcb_get_property_cookie_t get_property_cookie = xcb_get_property(
-            connection, delete, window, intern_atom->atom, XCB_ATOM_PIXMAP,
+            connection, delete, window, atom, XCB_ATOM_PIXMAP,
             offset, length);
 
     xcb_generic_error_t *error;
@@ -327,15 +332,14 @@ get_pixmap_atom(
     const char       *atom_name,
     xcb_window_t      window)
 {
-    xcb_intern_atom_reply_t *intern_atom = get_intern_atom(c, atom_name);
+    xcb_atom_t atom = get_atom(c, atom_name);
 
     xcb_get_property_reply_t *pixmap_property = get_pixmap_property(c, window,
-            intern_atom);
+            atom);
 
     xcb_pixmap_t pixmap_id = *((xcb_pixmap_t*) xcb_get_property_value(
                 pixmap_property));
 
-    free(intern_atom);
     free(pixmap_property);
 
     return pixmap_id;
@@ -348,17 +352,17 @@ set_pixmap_atom(
     xcb_window_t window,
     xcb_pixmap_t pixmap_id)
 {
-    xcb_intern_atom_reply_t *intern_atom = get_intern_atom(c, atom_name);
+    xcb_atom_t atom = get_atom(c, atom_name);
 
     xcb_get_property_reply_t *pixmap_property = get_pixmap_property(c, window,
-            intern_atom);
+            atom);
 
     xcb_void_cookie_t change_property_cookie;
     change_property_cookie = xcb_change_property_checked(
         c,
         XCB_PROP_MODE_REPLACE,
         window,
-        intern_atom->atom,
+        atom,
         pixmap_property->type,
         pixmap_property->format,
         1,
@@ -368,7 +372,6 @@ set_pixmap_atom(
     error = xcb_request_check(c, change_property_cookie);
     assert(!error);
 
-    free(intern_atom);
     free(pixmap_property);
 }
 
