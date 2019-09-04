@@ -10,10 +10,6 @@
  * Recursively traverses the path provided and inserts any image files found
  * into the database. Environment variables in the path will are expanded.
  **/
-wpd_error_t
-wpd_ftw(
-    const struct wpd_db_t* db,
-    const char *path);
+wpd_error_t wpd_ftw(const struct wpd_db_t *db, const char *path);
 
 #endif // FTW_H
-

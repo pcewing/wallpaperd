@@ -67,6 +67,8 @@ def generate_error_header(categories, path):
     # File header comment
     writer.write_comment_header()
     writer.write_blank_line()
+    writer.write_line("// clang-format off")
+    writer.write_blank_line()
 
     # Header guard
     writer.write_line('#ifndef ERROR_G_H')
@@ -119,6 +121,8 @@ def generate_error_implementation(categories, path):
 
     # File header comment
     writer.write_comment_header()
+    writer.write_blank_line()
+    writer.write_line("// clang-format off")
     writer.write_blank_line()
 
     # Includes

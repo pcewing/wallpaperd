@@ -1,9 +1,11 @@
 //
 // !!! WARNING !!!
-// 
+//
 // This file was auto-generated using the tool/codegen.py script. To make
 // modifications, edit tool/error.xml and re-run that script.
 //
+
+// clang-format off
 
 #ifndef ERROR_G_H
 #define ERROR_G_H
