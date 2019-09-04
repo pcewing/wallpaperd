@@ -209,6 +209,8 @@ load_yaml(const char *path, yaml_document_t* doc)
         error = WPD_ERROR_CONFIG_YAML_PARSER_LOAD_FAILURE;
     }
 
+    yaml_parser_delete(&parser);
+
     fclose(input);
     return error;
 }
@@ -229,7 +231,8 @@ parse_config(const char * path, struct wpd_config_t **config)
     (*config) = memcpy(malloc(sizeof(struct wpd_config_t)), &default_config,
             sizeof(struct wpd_config_t));
 
-    handle_mapping(&doc, yaml_document_get_root_node(&doc), root_handlers, *config);
+    handle_mapping(&doc, yaml_document_get_root_node(&doc), root_handlers,
+            *config);
 
     yaml_document_delete(&doc);
     return error;
@@ -280,9 +283,8 @@ load_config(struct wpd_config_t** config)
 wpd_error_t
 destroy_config(struct wpd_config_t** config)
 {
-    UNUSED(config);
-
     assert(config);
+    assert(*config);
 
     if ((*config)->search_path_count > 0)
     {

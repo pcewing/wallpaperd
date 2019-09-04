@@ -53,14 +53,16 @@ main(int argc, char *argv[])
     UNUSED(argc);
     UNUSED(argv);
 
+    wpd_error_t error;
+
     struct wpd_config_t* config;
-    wpd_error_t error = load_config(&config);
+    error = load_config(&config);
     if (error != WPD_ERROR_GLOBAL_SUCCESS)
     {
         LOGERROR("Failed to load config file: %s\n", wpd_error_str(error));
         wpd_exit(error);
     }
-    
+
     error = wpd_main_loop(config);
     if (error != WPD_ERROR_GLOBAL_SUCCESS)
     {
