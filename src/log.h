@@ -2,8 +2,9 @@
 #define LOG_H
 
 #include <stdarg.h>
+#include <stdint.h>
 
-#define log_level_t unsigned int
+typedef uint8_t log_level_t;
 
 #define LOGLEVEL_TRACE 0
 #define LOGLEVEL_DEBUG 1
