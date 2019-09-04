@@ -12,61 +12,69 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-char *xcb_generic_error_to_json(const xcb_generic_error_t *error) {
-    // clang-format off
-    const char * fmt = "{\n"
-        "  \"response_type\": %u,\n"
-        "  \"error_code\": %u,\n"
-        "  \"sequence\": %u,\n"
-        "  \"resource_id\": %u,\n"
-        "  \"minor_code\": %u,\n"
-        "  \"major_code\": %u,\n"
-        "  \"full_sequence\": %u,\n"
-        "}\n";
-    // clang-format on
+// clang-format off
 
-    int length =
-        1 + snprintf(NULL, 0, fmt, error->response_type, error->error_code,
-                     error->sequence, error->resource_id, error->minor_code,
-                     error->major_code, error->full_sequence);
+#define XCB_GENERIC_ERROR       0
+#define XCB_GET_GEOMETRY_REPLY  1
+
+static const char *xcb_json_templates[] = {
+
+    [XCB_GENERIC_ERROR] = "{"
+    " \"response_type\": %u,"
+    " \"error_code\": %u,"
+    " \"sequence\": %u,"
+    " \"resource_id\": %u,"
+    " \"minor_code\": %u,"
+    " \"major_code\": %u,"
+    " \"full_sequence\": %u"
+    " }",
+
+    [XCB_GET_GEOMETRY_REPLY] = "{"
+    " \"response_type\": %u,"
+    " \"depth\": %u,"
+    " \"sequence\": %u,"
+    " \"length\": %u,"
+    " \"root\": %u,"
+    " \"x\": %u,"
+    " \"y\": %u,"
+    " \"width\": %u,"
+    " \"height\": %u,"
+    " \"border_width\": %u"
+    " }",
+
+};
+
+// clang-format on
+
+char *xcb_generic_error_to_json(const xcb_generic_error_t *e) {
+    const char *fmt = xcb_json_templates[XCB_GENERIC_ERROR];
+
+    int length = 1 + snprintf(NULL, 0, fmt, e->response_type, e->error_code,
+                              e->sequence, e->resource_id, e->minor_code,
+                              e->major_code, e->full_sequence);
 
     char *result = malloc(length * sizeof(char));
     if (result) {
-        snprintf(result, length, fmt, error->response_type, error->error_code,
-                 error->sequence, error->resource_id, error->minor_code,
-                 error->major_code, error->full_sequence);
+        snprintf(result, length, fmt, e->response_type, e->error_code,
+                 e->sequence, e->resource_id, e->minor_code, e->major_code,
+                 e->full_sequence);
     }
 
     return result;
 }
 
-char *xcb_get_geometry_reply_to_json(const xcb_get_geometry_reply_t *geometry) {
-    // clang-format off
-    const char * fmt = "{"
-            " \"response_type\": %u,"
-            " \"depth\": %u,"
-            " \"sequence\": %u,"
-            " \"length\": %u,"
-            " \"root\": %u,"
-            " \"x\": %u,"
-            " \"y\": %u,"
-            " \"width\": %u,"
-            " \"height\": %u,"
-            " \"border_width\": %u }";
-    // clang-format on
+char *xcb_get_geometry_reply_to_json(const xcb_get_geometry_reply_t *g) {
+    const char *fmt = xcb_json_templates[XCB_GET_GEOMETRY_REPLY];
 
-    int length =
-        1 + snprintf(NULL, 0, fmt, geometry->response_type, geometry->depth,
-                     geometry->sequence, geometry->length, geometry->root,
-                     geometry->x, geometry->y, geometry->width,
-                     geometry->height, geometry->border_width);
+    int length = 1 + snprintf(NULL, 0, fmt, g->response_type, g->depth,
+                              g->sequence, g->length, g->root, g->x, g->y,
+                              g->width, g->height, g->border_width);
 
     char *result = malloc(length * sizeof(char));
     if (result) {
-        snprintf(result, length, fmt, geometry->response_type, geometry->depth,
-                 geometry->sequence, geometry->length, geometry->root,
-                 geometry->x, geometry->y, geometry->width, geometry->height,
-                 geometry->border_width);
+        snprintf(result, length, fmt, g->response_type, g->depth, g->sequence,
+                 g->length, g->root, g->x, g->y, g->width, g->height,
+                 g->border_width);
     }
 
     return result;
