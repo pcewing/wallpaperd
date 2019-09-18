@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -42,3 +43,5 @@ char *wpd_strdup_lower(const char *data) {
         lower[i] = tolower(lower[i]);
     return lower;
 }
+
+char *wpd_strerror(int errnum) { return strerror(errnum); }

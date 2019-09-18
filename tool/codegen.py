@@ -23,7 +23,7 @@ class Writer():
     def write_comment_header(self):
         self.lines.append("//")
         self.lines.append("// !!! WARNING !!!")
-        self.lines.append("// ")
+        self.lines.append("//")
         self.lines.append("// This file was auto-generated using the tool/codegen.py script. To make")
         self.lines.append("// modifications, edit tool/error.xml and re-run that script.")
         self.lines.append("//")

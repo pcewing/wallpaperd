@@ -3,6 +3,7 @@
 #include "parse.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <yaml.h>
@@ -186,14 +187,23 @@ static wpd_error_t handle_mapping(yaml_document_t *doc, yaml_node_t *node,
     return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
-wpd_error_t load_yaml(const char *path, yaml_document_t *doc) {
-    FILE *input = fopen(path, "rb");
-    if (!input)
-        return WPD_ERROR_CONFIG_FILE_OPEN_FAILURE;
+wpd_error_t open_config(const char *path, FILE **cfg) {
+    errno = 0;
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        LOGTRACE("Failed to open config file; error: %s", wpd_strerror(errno));
+        return (errno == ENOENT) ? WPD_ERROR_CONFIG_FILE_DOES_NOT_EXIST
+                                 : WPD_ERROR_CONFIG_FILE_OPEN_FAILURE;
+    }
 
+    *cfg = f;
+    return WPD_ERROR_GLOBAL_SUCCESS;
+}
+
+wpd_error_t load_yaml(FILE *cfg, yaml_document_t *doc) {
     yaml_parser_t parser;
     yaml_parser_initialize(&parser);
-    yaml_parser_set_input_file(&parser, input);
+    yaml_parser_set_input_file(&parser, cfg);
 
     wpd_error_t error = WPD_ERROR_GLOBAL_SUCCESS;
     if (!yaml_parser_load(&parser, doc)) {
@@ -202,7 +212,6 @@ wpd_error_t load_yaml(const char *path, yaml_document_t *doc) {
 
     yaml_parser_delete(&parser);
 
-    fclose(input);
     return error;
 }
 
@@ -210,9 +219,18 @@ wpd_error_t parse_config(const char *path, struct wpd_config_t **config) {
     wpd_error_t error = WPD_ERROR_GLOBAL_SUCCESS;
     yaml_document_t doc;
 
-    error = load_yaml(path, &doc);
+    FILE *cfg;
+    error = open_config(path, &cfg);
     if (error != WPD_ERROR_GLOBAL_SUCCESS) {
-        yaml_document_delete(&doc);
+        // TODO: If error == WPD_ERROR_CONFIG_FILE_DOES_NOT_EXIST does it make
+        // sense to load a default config? What would be a sensible default
+        // search path? Maybe ($XDG_PICTURES_DIR|$HOME/Pictures)/(w|W)allpapers
+        return error;
+    }
+
+    error = load_yaml(cfg, &doc);
+    if (error != WPD_ERROR_GLOBAL_SUCCESS) {
+        fclose(cfg);
         return error;
     }
 
@@ -223,6 +241,8 @@ wpd_error_t parse_config(const char *path, struct wpd_config_t **config) {
                    *config);
 
     yaml_document_delete(&doc);
+    fclose(cfg);
+
     return error;
 }
 

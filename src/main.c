@@ -51,13 +51,13 @@ int main(int argc, char *argv[]) {
     struct wpd_config_t *config;
     error = load_config(&config);
     if (error != WPD_ERROR_GLOBAL_SUCCESS) {
-        LOGERROR("Failed to load config file: %s\n", wpd_error_str(error));
+        LOGERROR("Failed to load config file: %s", wpd_error_str(error));
         wpd_exit(error);
     }
 
     error = wpd_main_loop(config);
     if (error != WPD_ERROR_GLOBAL_SUCCESS) {
-        LOGERROR("Unhandled error encountered: %s\n", wpd_error_str(error));
+        LOGERROR("Unhandled error encountered: %s", wpd_error_str(error));
         wpd_exit(error);
     }
 

@@ -1,4 +1,3 @@
-
 #define _GNU_SOURCE
 #include <assert.h>
 #include <stdio.h>
@@ -29,7 +28,7 @@ wpd_error_t initialize_database(struct wpd_db_t **result) {
 
     int rc = sqlite3_open(":memory:", &db->handle);
     if (rc != 0) {
-        LOGERROR("Can't open database: %s\n", sqlite3_errmsg(db->handle));
+        LOGERROR("Can't open database: %s", sqlite3_errmsg(db->handle));
         sqlite3_close(db->handle);
         return WPD_ERROR_DATA_SQLITE_OPEN_FAILURE;
     }
@@ -65,7 +64,7 @@ wpd_error_t insert_wallpaper(const struct wpd_db_t *db,
 
     int rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
-        printf("Failed to insert wallpaper: %s\n", sqlite3_errmsg(db->handle));
+        LOGERROR("Failed to insert wallpaper: %s", sqlite3_errmsg(db->handle));
         return 1;
     }
 
@@ -241,8 +240,8 @@ int create_wallpaper_table(sqlite3 *db) {
 
     int rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
-        printf("Failed to create wallpaper database table: %s\n",
-               sqlite3_errmsg(db));
+        LOGERROR("Failed to create wallpaper database table: %s",
+                 sqlite3_errmsg(db));
         return rc;
     }
 

@@ -43,8 +43,9 @@ static const wpd_error_t WPD_ERROR_PARSE_U32_OVERFLOW = 12;
 static const wpd_error_t WPD_ERROR_CONFIG_DUPLICATE_FIELD_DEFINITION = 13;
 static const wpd_error_t WPD_ERROR_CONFIG_MISSING_YAML_MAP_ITEM_HANDLER = 14;
 static const wpd_error_t WPD_ERROR_CONFIG_FILE_OPEN_FAILURE = 15;
-static const wpd_error_t WPD_ERROR_CONFIG_YAML_PARSER_LOAD_FAILURE = 16;
-static const wpd_error_t WPD_ERROR_CONFIG_HOME_PATH_UNDEFINED = 17;
+static const wpd_error_t WPD_ERROR_CONFIG_FILE_DOES_NOT_EXIST = 16;
+static const wpd_error_t WPD_ERROR_CONFIG_YAML_PARSER_LOAD_FAILURE = 17;
+static const wpd_error_t WPD_ERROR_CONFIG_HOME_PATH_UNDEFINED = 18;
 
 const char *
 wpd_error_str(wpd_error_t error);

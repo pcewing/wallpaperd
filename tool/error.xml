@@ -28,6 +28,7 @@
         <Error name="DUPLICATE_FIELD_DEFINITION" />
         <Error name="MISSING_YAML_MAP_ITEM_HANDLER" />
         <Error name="FILE_OPEN_FAILURE" />
+        <Error name="FILE_DOES_NOT_EXIST" />
         <Error name="YAML_PARSER_LOAD_FAILURE" />
         <Error name="HOME_PATH_UNDEFINED" />
     </ErrorCategory>

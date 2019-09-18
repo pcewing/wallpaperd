@@ -66,4 +66,9 @@ char *wpd_path_join(const char *a, const char *b);
  **/
 char *wpd_strdup_lower(const char *data);
 
+/**
+ * Gets the string description for an OS error code.
+ **/
+char *wpd_strerror(int errnum);
+
 #endif // CORE_H
