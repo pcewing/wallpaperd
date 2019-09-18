@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
+compare_tool="meld"
+
 mode="dry"
-echo "$1"
 [ "$1" = "--live" ] && mode="live"
 
 echo "Running in $mode mode"
@@ -14,7 +15,7 @@ if [ "$mode" = "dry" ]; then
             clang-format -style=file "$f" > "../.fmt/$f"
         done
     )
-    bcompare src .fmt
+    $compare_tool src .fmt
     rm -rf .fmt
 
     exit 0
