@@ -3,8 +3,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <time.h>
+#include <stdbool.h>
 
 #define LOGLEVEL LOGLEVEL_DEBUG
+
+static bool logs_suppressed = false;
 
 static const char *log_level_strings[] = {
     "TRACE", "DEBUG", "INFO", "WARN", "ERROR",
@@ -15,8 +18,12 @@ const char *log_level_str(const log_level_t level) {
     return log_level_strings[level];
 }
 
+void suppress_logs() {
+    logs_suppressed = true;
+}
+
 void LOG(const log_level_t level, const char *format, ...) {
-    if (level < LOGLEVEL) {
+    if (logs_suppressed || level < LOGLEVEL) {
         return;
     }
 

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include "core.h"
@@ -17,6 +18,14 @@ char *wpd_get_extension(const char *path) {
 }
 
 unsigned int wpd_sleep(unsigned int seconds) { return sleep(seconds); }
+unsigned int wpd_usleep(unsigned int seconds) { return usleep(seconds); }
+
+uint64_t get_timestamp_us() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+
+    return (uint64_t)1000000 * (uint64_t)tv.tv_sec + (uint64_t)tv.tv_usec;
+}
 
 void wpd_srand() {
     struct timespec spec;

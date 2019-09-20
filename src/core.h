@@ -36,6 +36,16 @@ char *wpd_get_extension(const char *path);
 unsigned int wpd_sleep(unsigned int seconds);
 
 /**
+ * Sleeps for a specified number of microseconds.
+ **/
+unsigned int wpd_usleep(unsigned int seconds);
+
+/**
+ * Gets the current system time in microseconds.
+ **/
+uint64_t get_timestamp_us();
+
+/**
  * Seeds the global random number generator.
  **/
 void wpd_srand();
