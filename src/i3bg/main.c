@@ -20,19 +20,19 @@ wpd_error_t send_message(const char *msg) {
     wpd_error_t error = WPD_ERROR_GLOBAL_SUCCESS;
     int sfd;
 
-    error = connect_socket(&sfd);
+    error = ipc_connect(&sfd);
     if (error != WPD_ERROR_GLOBAL_SUCCESS) {
         LOGERROR("Failed to connect to socket");
         goto exit;
     }
 
-    error = send_message_socket(sfd, msg);
+    error = ipc_send(sfd, msg);
     if (error != WPD_ERROR_GLOBAL_SUCCESS) {
         LOGERROR("Failed to send ipc message");
         goto exit;
     }
 
-    close_socket(sfd);
+    ipc_close(sfd);
 
 exit:
     return error;

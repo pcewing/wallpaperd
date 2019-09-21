@@ -3,20 +3,21 @@
 #include "parse.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <sys/un.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #define SV_SOCK_PATH "/tmp/i3bgd"
 
-#define BUF_SIZE 100
 #define BACKLOG 5
 
 // TODO: Replace all WPD_ERROR_GLOBAL_FAILURE with real errors
 
-wpd_error_t open_socket(int *result) {
+wpd_error_t ipc_open(int *result) {
     int sfd;
     struct sockaddr_un addr;
 
@@ -53,29 +54,38 @@ wpd_error_t open_socket(int *result) {
     return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
-wpd_error_t poll_socket(int sfd) {
+wpd_error_t ipc_poll(int sfd, struct ipc_message_t **msg) {
     int cfd;
 
     cfd = accept(sfd, NULL, NULL);
-    if (cfd == -1 && errno != EWOULDBLOCK)
+    if (cfd == -1) {
+        *msg = NULL;
+        return (errno != EWOULDBLOCK) ? WPD_ERROR_GLOBAL_FAILURE : WPD_ERROR_GLOBAL_SUCCESS;
+    }
+
+    *msg = malloc(sizeof(struct ipc_message_t));
+    
+    if (ipc_recv(cfd, *msg) != WPD_ERROR_GLOBAL_SUCCESS) {
+        free(*msg);
+        *msg = NULL;
         return WPD_ERROR_GLOBAL_FAILURE;
+    }
 
-    recv_message_socket(cfd);
-
+    // TODO: If this fails, free msg
     if (close(cfd) == -1)
         return WPD_ERROR_GLOBAL_FAILURE;
 
     return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
-wpd_error_t close_socket(int sfd) {
+wpd_error_t ipc_close(int sfd) {
     if (close(sfd) == -1)
         return WPD_ERROR_GLOBAL_FAILURE;
 
     return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
-wpd_error_t connect_socket(int *result) {
+wpd_error_t ipc_connect(int *result) {
     struct sockaddr_un addr;
     int sfd;
 
@@ -94,58 +104,58 @@ wpd_error_t connect_socket(int *result) {
     return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
-wpd_error_t send_message_socket(int sfd, const char *msg) {
-    /*
-     * TODO: Send header first
-     * 
-    uint8_t header[4];
-    header[0] = (head.length >>  0) & 0x000000FF;
-    header[1] = (head.length >>  8) & 0x000000FF;
-    header[2] = (head.length >> 16) & 0x000000FF;
-    header[3] = (head.length >> 24) & 0x000000FF;
+wpd_error_t ipc_send(int sfd, const char *msg) {
+    // Calculate message length
+    ssize_t length = strlen(msg);
 
-    if (write(sfd, header, 4) != 4)
+    // Initialize header
+    uint8_t header[HEADER_LENGTH];
+    header[0] = length & 0xFF;
+    header[1] = (length >>  8) & 0xFF;
+    header[2] = (length >> 16) & 0xFF;
+    header[3] = (length >> 24) & 0xFF;
+
+    // Send header
+    if (write(sfd, header, HEADER_LENGTH) != HEADER_LENGTH)
         return WPD_ERROR_GLOBAL_FAILURE;
 
-    */
-
     // Send body
-    ssize_t len = strlen(msg);
-    if (write(sfd, msg, len) != len)
+    if (write(sfd, msg, length) != length)
         return WPD_ERROR_GLOBAL_FAILURE;
 
     return WPD_ERROR_GLOBAL_SUCCESS;
 }
 
-wpd_error_t recv_message_socket(int sfd) {
-    /*
-     * TODO: Receive header first
-     *
-    void* header[4];
-    if (read(sfd, header, 4) != 4) {
-        error = WPD_ERROR_GLOBAL_FAILURE;
-        goto exit;
-    }
+wpd_error_t ipc_recv(int sfd, struct ipc_message_t *msg) {
+    assert(msg);
 
-    uint32_t length;
-    error = parse_uint32(header, &length);
-    if (error != WPD_ERROR_GLOBAL_SUCCESS) {
-        goto exit;
-    }
-
-    printf("Message length: %u", length);
-
-    */
-
-    // Read body
-    char buf[BUF_SIZE];
-    ssize_t numRead;
-    while ((numRead = read(sfd, buf, BUF_SIZE)) > 0)
-        LOGINFO("Received IPC message: %s", buf);
-
-    if (numRead == -1)
+    uint8_t header[HEADER_LENGTH];
+    if (read(sfd, header, HEADER_LENGTH) != HEADER_LENGTH)
         return WPD_ERROR_GLOBAL_FAILURE;
 
+    uint32_t length = header[0];
+    length |= header[1] <<  8;
+    length |= header[2] << 16;
+    length |= header[3] << 24;
+
+    // Read body
+    uint8_t *buf = malloc(length * sizeof(uint8_t));
+    ssize_t num_read = read(sfd, buf, length);
+    if (num_read == length)
+        LOGINFO("Received IPC message of length %u", length);
+    else {
+        if (num_read == -1)
+            LOGERROR("Failed to read from IPC socket");
+        else
+            LOGERROR("Received IPC message with unexpected length; expected length = %u, actual length = %u", length, num_read);
+
+        free(buf);
+        return WPD_ERROR_GLOBAL_FAILURE;
+    }
+
+    // TODO: buf needs to be freed by the caller
+    msg->head.length = length;
+    msg->body.data = buf;
     return WPD_ERROR_GLOBAL_SUCCESS;
 }
 

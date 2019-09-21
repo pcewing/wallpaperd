@@ -70,6 +70,17 @@ struct wpd_command_definition_t *get_command_definition_by_verb(const char *verb
     return result;
 }
 
+void print_raw_data(struct ipc_message_t *msg) {
+    if (msg->head.length > 0)
+        printf("< %i", msg->body.data[0]);
+
+    for (uint32_t i = 1; i < msg->head.length; ++i) {
+        printf(", %i", msg->body.data[i]);
+    }
+
+    printf(" >\n");
+}
+
 wpd_error_t wpd_main_loop(struct wpd_config_t *config) {
     // Seed the rng that will be used to select images
     wpd_srand();
@@ -91,7 +102,13 @@ wpd_error_t wpd_main_loop(struct wpd_config_t *config) {
     uint64_t last_update = get_timestamp_us();
 
     while (config->rotation.enabled) {
-        poll_socket(ipc_socket);
+        struct ipc_message_t *msg;
+        error = ipc_poll(ipc_socket, &msg);
+        if (error == WPD_ERROR_GLOBAL_SUCCESS && msg) {
+            print_raw_data(msg);
+            free(msg->body.data);
+            free(msg);
+        }
 
         struct wpd_command_t *command;
         while ( (command = StsQueue.pop(command_queue)) != NULL) {
@@ -128,7 +145,7 @@ int main(int argc, char *argv[]) {
 
     // TODO: This doesn't fail if the socket already exists; it will open and
     // the existing process' socket will be closed
-    error = open_socket(&ipc_socket);
+    error = ipc_open(&ipc_socket);
     if (error != WPD_ERROR_GLOBAL_SUCCESS) {
         LOGERROR("Failed to open the IPC socket: %s", wpd_error_str(error));
         wpd_exit(error);
@@ -155,7 +172,7 @@ int main(int argc, char *argv[]) {
 
     destroy_config(&config);
 
-    close_socket(ipc_socket);
+    ipc_close(ipc_socket);
 
     wpd_exit(WPD_ERROR_GLOBAL_SUCCESS);
 }

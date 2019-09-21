@@ -5,30 +5,33 @@
 
 struct ipc_message_head_t {
     uint32_t length;
+    uint8_t pad[28]; // Pad the entire header packet to 32 bytes
 };
 
+#define HEADER_LENGTH sizeof(struct ipc_message_head_t)
+
 struct ipc_message_body_t {
-    const void *data;
+    uint8_t *data;
 };
 
 struct ipc_message_t {
-    struct ipc_message_head_t *head;
-    struct ipc_message_body_t *body;
+    struct ipc_message_head_t head;
+    struct ipc_message_body_t body;
 };
 
 // Server Interface
 
-wpd_error_t open_socket(int *result);
-wpd_error_t poll_socket(int sfd);
-wpd_error_t close_socket(int sfd);
+wpd_error_t ipc_open(int *result);
+wpd_error_t ipc_poll(int sfd, struct ipc_message_t **msg);
 
 // Client Interface
 
-wpd_error_t connect_socket(int *result);
+wpd_error_t ipc_connect(int *result);
 
 // Common Interface
 
-wpd_error_t send_message_socket(int sfd, const char *msg);
-wpd_error_t recv_message_socket(int sfd);
+wpd_error_t ipc_send(int sfd, const char *msg);
+wpd_error_t ipc_recv(int sfd, struct ipc_message_t *msg);
+wpd_error_t ipc_close(int sfd);
 
 #endif // IPC_H
