@@ -77,6 +77,11 @@ char *wpd_path_join(const char *a, const char *b);
 char *wpd_strdup_lower(const char *data);
 
 /**
+ * Checks whether or not the needle matches any strings in the haystack.
+ **/
+bool strmatch(const char **haystack, const char *needle);
+
+/**
  * Gets the string description for an OS error code.
  **/
 char *wpd_strerror(int errnum);

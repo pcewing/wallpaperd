@@ -5,13 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool match(const char **haystack, const char *needle) {
-    for (int i = 0; haystack[i]; i++)
-        if (strcmp(needle, haystack[i]) == 0)
-            return true;
-    return false;
-}
-
 wpd_error_t parse_bool(const char *data, bool *result) {
     static const char *t[] = {"true", "on", "yes", "y", NULL};
     static const char *f[] = {"false", "off", "no", "n", NULL};
@@ -20,9 +13,9 @@ wpd_error_t parse_bool(const char *data, bool *result) {
 
     wpd_error_t error = WPD_ERROR_GLOBAL_SUCCESS;
 
-    if (match(t, lower))
+    if (strmatch(t, lower))
         *result = true;
-    else if (match(f, lower))
+    else if (strmatch(f, lower))
         *result = false;
     else
         error = WPD_ERROR_PARSE_BOOL_INVALID;

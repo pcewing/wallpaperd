@@ -53,4 +53,11 @@ char *wpd_strdup_lower(const char *data) {
     return lower;
 }
 
+bool strmatch(const char **haystack, const char *needle) {
+    for (int i = 0; haystack[i]; i++)
+        if (strcmp(needle, haystack[i]) == 0)
+            return true;
+    return false;
+}
+
 char *wpd_strerror(int errnum) { return strerror(errnum); }
