@@ -1,5 +1,7 @@
 
-SRC=./src
+SRC_DIR=./src
+LIB_DIR=$(SRC_DIR)/lib
+CONTRIB_DIR=$(SRC_DIR)/contrib
 
 CFLAGS_SQLITE=`pkg-config --cflags sqlite3`
 LDFLAGS_SQLITE=`pkg-config --libs sqlite3`
@@ -13,7 +15,8 @@ LDFLAGS_XCB_IMAGE=`pkg-config --libs xcb-image`
 # TODO: Is there a better way to do this? pkg-config doesn't work
 LDFLAGS_YAML=-lyaml
 
-CFLAGS_BASE=-g3 -Wall -Wextra
+INCLUDES=-I$(LIB_DIR) -I$(CONTRIB_DIR)
+CFLAGS_BASE=-g3 -Wall -Wextra $(INCLUDES)
 CFLAGS=$(CFLAGS_BASE) $(CFLAGS_XCB) $(CFLAGS_XCB_IMAGE) $(CFLAGS_SQLITE)
 
 LDFLAGS=-lm $(LDFLAGS_XCB) $(LDFLAGS_XCB_IMAGE) $(LDFLAGS_SQLITE) $(LDFLAGS_YAML)
@@ -23,35 +26,19 @@ all: wallpaperd
 build_dir:
 	mkdir -p build
 
-error.o: build_dir
-	gcc -c -o build/error.o $(CFLAGS_BASE) $(SRC)/error.g.c
+objects: build_dir
+	gcc -c -o build/error.o $(CFLAGS_BASE) $(LIB_DIR)/error.g.c
+	gcc -c -o build/config.o $(CFLAGS_BASE) $(LIB_DIR)/config.c
+	gcc -c -o build/log.o $(CFLAGS_BASE) $(LIB_DIR)/log.c
+	gcc -c -o build/parse.o $(CFLAGS_BASE) $(LIB_DIR)/parse.c
+	gcc -c -o build/core.o $(CFLAGS_BASE) $(LIB_DIR)/core.c
+	gcc -c -o build/image.o $(CFLAGS_BASE) $(LIB_DIR)/image.c
+	gcc -c -o build/ftw.o $(CFLAGS_BASE) $(LIB_DIR)/ftw.c 
+	gcc -c -o build/wallpaper.o $(CFLAGS_BASE) $(LIB_DIR)/wallpaper.c
+	gcc -c -o build/data.o $(CFLAGS_BASE) $(LIB_DIR)/data.c
 
-config.o: build_dir
-	gcc -c -o build/config.o $(CFLAGS_BASE) $(SRC)/config.c
-
-log.o: build_dir
-	gcc -c -o build/log.o $(CFLAGS_BASE) $(SRC)/log.c
-
-parse.o: build_dir
-	gcc -c -o build/parse.o $(CFLAGS_BASE) $(SRC)/parse.c
-
-core.o: build_dir
-	gcc -c -o build/core.o $(CFLAGS_BASE) $(SRC)/core.c
-
-image.o: build_dir
-	gcc -c -o build/image.o $(CFLAGS_BASE) $(SRC)/image.c
-
-ftw.o: build_dir
-	gcc -c -o build/ftw.o $(CFLAGS_BASE) $(SRC)/ftw.c 
-
-wallpaper.o: build_dir
-	gcc -c -o build/wallpaper.o $(CFLAGS_BASE) $(SRC)/wallpaper.c
-
-data.o: build_dir
-	gcc -c -o build/data.o $(CFLAGS_BASE) $(SRC)/data.c
-
-wallpaperd: build_dir ftw.o log.o core.o wallpaper.o image.o data.o config.o error.o parse.o
-	cc -o build/wallpaperd $(SRC)/main.c build/*.o $(CFLAGS) $(LDFLAGS)
+wallpaperd: objects
+	cc -o build/i3bgd $(SRC_DIR)/i3bgd/main.c build/*.o $(CFLAGS) $(LDFLAGS)
 
 clean:
 	rm -rf ./build
