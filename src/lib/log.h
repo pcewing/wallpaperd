@@ -12,6 +12,7 @@ typedef uint8_t log_level_t;
 #define LOGLEVEL_WARN 3
 #define LOGLEVEL_ERROR 4
 
+void suppress_logs();
 void LOG(const log_level_t level, const char *message, ...);
 
 #define LOGTRACE(message, args...) LOG(LOGLEVEL_TRACE, message, ##args)

@@ -8,11 +8,12 @@ mode="dry"
 echo "Running in $mode mode"
 
 if [ "$mode" = "dry" ]; then
-    rm -rf .fmt && mkdir -p .fmt
+    rm -rf .fmt && cp -r src .fmt
     (
-        cd src
-        for f in *; do
-            clang-format -style=file "$f" > "../.fmt/$f"
+        cd .fmt
+        files="$(find . -iname '*.[hc]')"
+        for f in $files; do
+            clang-format -i -style=file "$f"
         done
     )
     $compare_tool src .fmt

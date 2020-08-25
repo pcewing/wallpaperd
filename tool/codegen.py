@@ -6,6 +6,7 @@ import os
 REPO_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 TOOL_DIR = os.path.join(REPO_DIR, 'tool')
 SRC_DIR = os.path.join(REPO_DIR, 'src')
+LIB_DIR = os.path.join(SRC_DIR, 'lib')
 
 class Writer():
     def __init__(self, path):
@@ -211,8 +212,8 @@ def generate_error_files():
         category.errors = errors
         categories.append(category)
         
-    generate_error_header(categories, os.path.join(SRC_DIR, 'error.g.h'))
-    generate_error_implementation(categories, os.path.join(SRC_DIR, 'error.g.c'))
+    generate_error_header(categories, os.path.join(LIB_DIR, 'error.g.h'))
+    generate_error_implementation(categories, os.path.join(LIB_DIR, 'error.g.c'))
         
     return root
 

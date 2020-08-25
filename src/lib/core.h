@@ -9,6 +9,9 @@
 
 #define UNUSED(x) (void)(x)
 
+#define ARRLEN(x) (sizeof(x) / sizeof((x)[0]))
+#define ARRLEN_U32(x) (uint32_t) ARRLEN(x)
+
 /**
  * Terminates the application with the specified error code.
  **/
@@ -34,6 +37,16 @@ char *wpd_get_extension(const char *path);
  * Sleeps for a specified number of seconds.
  **/
 unsigned int wpd_sleep(unsigned int seconds);
+
+/**
+ * Sleeps for a specified number of microseconds.
+ **/
+unsigned int wpd_usleep(unsigned int seconds);
+
+/**
+ * Gets the current system time in microseconds.
+ **/
+uint64_t get_timestamp_us();
 
 /**
  * Seeds the global random number generator.
@@ -65,6 +78,11 @@ char *wpd_path_join(const char *a, const char *b);
  * freed by the caller.
  **/
 char *wpd_strdup_lower(const char *data);
+
+/**
+ * Checks whether or not the needle matches any strings in the haystack.
+ **/
+bool strmatch(const char **haystack, const char *needle);
 
 /**
  * Gets the string description for an OS error code.

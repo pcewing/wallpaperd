@@ -1,0 +1,62 @@
+// IDL file defining flatbuffer remote procedure calls.
+
+namespace I3BG.Rpc;
+
+// ~~~ Pause ~~~
+
+table PauseRequest {
+    duration_ms:int;
+}
+
+table PauseResponse {
+    success:bool;
+}
+
+// ~~~ Discover ~~~
+
+table DiscoverRequest {}
+
+table DiscoverResponse {
+    pid:int;
+}
+
+// ~~~ Request ~~~
+
+enum RequestType:int { Pause, Discover }
+
+union RequestContent { PauseRequest, DiscoverRequest } 
+
+table Request {
+    type:RequestType;
+    content:RequestContent;
+}
+
+// ~~~ Response ~~~
+
+enum ResponseType:int { Pause, Discover }
+
+union ResponseContent { PauseResponse, DiscoverResponse }
+
+table Response {
+    type:ResponseType;
+    content:ResponseContent;
+}
+
+// ~~~ Message ~~~
+
+enum MessageType:int {
+    Request,
+    Response
+}
+
+union MessageContent {
+    Request,
+    Response
+}
+
+table Message {
+    type:MessageType;
+    content:MessageContent;
+}
+
+root_type Message;

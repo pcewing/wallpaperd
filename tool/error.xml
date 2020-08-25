@@ -3,14 +3,14 @@
         <Error name="SUCCESS" />
         <Error name="FAILURE" />
         <Error name="NULL_PARAM" />
+        <Error name="ALREADY_RUNNING" />
     </ErrorCategory>
     <ErrorCategory name="XCB">
         <Error name="GET_GEOMETRY_FAILED" />
     </ErrorCategory>
     <ErrorCategory name="FTW">
         <Error name="UNKNOWN_EXTENSION" />
-    </ErrorCategory>
-    <ErrorCategory name="IMAGE">
+    </ErrorCategory> <ErrorCategory name="IMAGE">
         <Error name="STBI_LOAD_FAILURE" />
     </ErrorCategory>
     <ErrorCategory name="DATA">
@@ -31,5 +31,28 @@
         <Error name="FILE_DOES_NOT_EXIST" />
         <Error name="YAML_PARSER_LOAD_FAILURE" />
         <Error name="HOME_PATH_UNDEFINED" />
+    </ErrorCategory>
+    <ErrorCategory name="IPC">
+        <Error name="FAILED_TO_CREATE_SOCKET" />
+        <Error name="FAILED_TO_GET_FLAGS" />
+        <Error name="FAILED_TO_SET_FLAGS" />
+        <Error name="FAILED_TO_CONNECT" />
+        <Error name="INVALID_ADDRESS_PATH_LENGTH" />
+        <Error name="FAILED_TO_REMOVE_SOCKET" />
+        <Error name="FAILED_TO_BIND_SOCKET" />
+        <Error name="FAILED_TO_LISTEN_ON_SOCKET" />
+        <Error name="FAILED_TO_WRITE_TO_SOCKET" />
+        <Error name="UNEXPECTED_WRITE_LENGTH" />
+        <Error name="FAILED_TO_READ_FROM_SOCKET" />
+        <Error name="UNEXPECTED_READ_LENGTH" />
+        <Error name="FAILED_TO_ACCEPT_CONNECTION" />
+        <Error name="FAILED_TO_CLOSE_SOCKET" />
+    </ErrorCategory>
+    <ErrorCategory name="RPC">
+        <Error name="UNEXPECTED_MESSAGE_TYPE" />
+        <Error name="UNEXPECTED_RESPONSE_TYPE" />
+        <Error name="REQUEST_TYPE_UNKNOWN" />
+        <Error name="INVALID_MESSAGE" />
+        <Error name="MISSING_REPONSE_ALLOCATOR" />
     </ErrorCategory>
 </ErrorCategories>

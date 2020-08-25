@@ -436,6 +436,8 @@ wpd_error_t wpd_set_wallpapers(const struct wpd_db_t *db) {
         xcb_screen_next(&screen_iterator);
     }
 
+    xcb_set_close_down_mode(connection, XCB_CLOSE_DOWN_RETAIN_PERMANENT);
+
     xcb_disconnect(connection);
 
     return WPD_ERROR_GLOBAL_SUCCESS;

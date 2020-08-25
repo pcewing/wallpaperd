@@ -15,7 +15,10 @@ desktop environments.
 - xcb
 - sqlite3
 - yaml
-- stb\_image\*
+- flatbuffers\*
+- stb\_image\*\*
 
-\*This is a single header library and is checked directly into the source tree
+\* The source for this is cloned and built as part of the build process (See
+[Makefile](./Makefile))
+\*\*This is a single header library and is checked directly into the source tree
 

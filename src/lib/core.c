@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -17,6 +18,14 @@ char *wpd_get_extension(const char *path) {
 }
 
 unsigned int wpd_sleep(unsigned int seconds) { return sleep(seconds); }
+unsigned int wpd_usleep(unsigned int seconds) { return usleep(seconds); }
+
+uint64_t get_timestamp_us() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+
+    return (uint64_t)1000000 * (uint64_t)tv.tv_sec + (uint64_t)tv.tv_usec;
+}
 
 void wpd_srand() {
     struct timespec spec;
@@ -42,6 +51,13 @@ char *wpd_strdup_lower(const char *data) {
     for (int i = 0; lower[i]; i++)
         lower[i] = tolower(lower[i]);
     return lower;
+}
+
+bool strmatch(const char **haystack, const char *needle) {
+    for (int i = 0; haystack[i]; i++)
+        if (strcmp(needle, haystack[i]) == 0)
+            return true;
+    return false;
 }
 
 char *wpd_strerror(int errnum) { return strerror(errnum); }
