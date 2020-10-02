@@ -75,39 +75,39 @@ __flatbuffers_build_table(flatbuffers_, I3BG_Rpc_Message, 3)
 #define __I3BG_Rpc_PauseRequest_formal_args , int32_t v0
 #define __I3BG_Rpc_PauseRequest_call_args , v0
 static inline I3BG_Rpc_PauseRequest_ref_t I3BG_Rpc_PauseRequest_create(flatbuffers_builder_t *B __I3BG_Rpc_PauseRequest_formal_args);
-__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_PauseRequest, I3BG_Rpc_PauseRequest_identifier, I3BG_Rpc_PauseRequest_type_identifier)
+__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_PauseRequest, I3BG_Rpc_PauseRequest_file_identifier, I3BG_Rpc_PauseRequest_type_identifier)
 
 #define __I3BG_Rpc_PauseResponse_formal_args , flatbuffers_bool_t v0
 #define __I3BG_Rpc_PauseResponse_call_args , v0
 static inline I3BG_Rpc_PauseResponse_ref_t I3BG_Rpc_PauseResponse_create(flatbuffers_builder_t *B __I3BG_Rpc_PauseResponse_formal_args);
-__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_PauseResponse, I3BG_Rpc_PauseResponse_identifier, I3BG_Rpc_PauseResponse_type_identifier)
+__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_PauseResponse, I3BG_Rpc_PauseResponse_file_identifier, I3BG_Rpc_PauseResponse_type_identifier)
 
 #define __I3BG_Rpc_DiscoverRequest_formal_args 
 #define __I3BG_Rpc_DiscoverRequest_call_args 
 static inline I3BG_Rpc_DiscoverRequest_ref_t I3BG_Rpc_DiscoverRequest_create(flatbuffers_builder_t *B __I3BG_Rpc_DiscoverRequest_formal_args);
-__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_DiscoverRequest, I3BG_Rpc_DiscoverRequest_identifier, I3BG_Rpc_DiscoverRequest_type_identifier)
+__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_DiscoverRequest, I3BG_Rpc_DiscoverRequest_file_identifier, I3BG_Rpc_DiscoverRequest_type_identifier)
 
 #define __I3BG_Rpc_DiscoverResponse_formal_args , int32_t v0
 #define __I3BG_Rpc_DiscoverResponse_call_args , v0
 static inline I3BG_Rpc_DiscoverResponse_ref_t I3BG_Rpc_DiscoverResponse_create(flatbuffers_builder_t *B __I3BG_Rpc_DiscoverResponse_formal_args);
-__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_DiscoverResponse, I3BG_Rpc_DiscoverResponse_identifier, I3BG_Rpc_DiscoverResponse_type_identifier)
+__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_DiscoverResponse, I3BG_Rpc_DiscoverResponse_file_identifier, I3BG_Rpc_DiscoverResponse_type_identifier)
 
 #define __I3BG_Rpc_Request_formal_args , I3BG_Rpc_RequestType_enum_t v0, I3BG_Rpc_RequestContent_union_ref_t v2
 #define __I3BG_Rpc_Request_call_args , v0, v2
 static inline I3BG_Rpc_Request_ref_t I3BG_Rpc_Request_create(flatbuffers_builder_t *B __I3BG_Rpc_Request_formal_args);
-__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_Request, I3BG_Rpc_Request_identifier, I3BG_Rpc_Request_type_identifier)
+__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_Request, I3BG_Rpc_Request_file_identifier, I3BG_Rpc_Request_type_identifier)
 
 #define __I3BG_Rpc_Response_formal_args , I3BG_Rpc_ResponseType_enum_t v0, I3BG_Rpc_ResponseContent_union_ref_t v2
 #define __I3BG_Rpc_Response_call_args , v0, v2
 static inline I3BG_Rpc_Response_ref_t I3BG_Rpc_Response_create(flatbuffers_builder_t *B __I3BG_Rpc_Response_formal_args);
-__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_Response, I3BG_Rpc_Response_identifier, I3BG_Rpc_Response_type_identifier)
+__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_Response, I3BG_Rpc_Response_file_identifier, I3BG_Rpc_Response_type_identifier)
 
 #define __I3BG_Rpc_Message_formal_args , I3BG_Rpc_MessageType_enum_t v0, I3BG_Rpc_MessageContent_union_ref_t v2
 #define __I3BG_Rpc_Message_call_args , v0, v2
 static inline I3BG_Rpc_Message_ref_t I3BG_Rpc_Message_create(flatbuffers_builder_t *B __I3BG_Rpc_Message_formal_args);
-__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_Message, I3BG_Rpc_Message_identifier, I3BG_Rpc_Message_type_identifier)
+__flatbuffers_build_table_prolog(flatbuffers_, I3BG_Rpc_Message, I3BG_Rpc_Message_file_identifier, I3BG_Rpc_Message_type_identifier)
 
-static inline I3BG_Rpc_RequestContent_union_ref_t I3BG_Rpc_RequestContent_as_NONE()
+static inline I3BG_Rpc_RequestContent_union_ref_t I3BG_Rpc_RequestContent_as_NONE(void)
 { I3BG_Rpc_RequestContent_union_ref_t uref; uref.type = I3BG_Rpc_RequestContent_NONE; uref.value = 0; return uref; }
 static inline I3BG_Rpc_RequestContent_union_ref_t I3BG_Rpc_RequestContent_as_PauseRequest(I3BG_Rpc_PauseRequest_ref_t ref)
 { I3BG_Rpc_RequestContent_union_ref_t uref; uref.type = I3BG_Rpc_RequestContent_PauseRequest; uref.value = ref; return uref; }
@@ -124,7 +124,7 @@ static I3BG_Rpc_RequestContent_union_ref_t I3BG_Rpc_RequestContent_clone(flatbuf
     }
 }
 
-static inline I3BG_Rpc_ResponseContent_union_ref_t I3BG_Rpc_ResponseContent_as_NONE()
+static inline I3BG_Rpc_ResponseContent_union_ref_t I3BG_Rpc_ResponseContent_as_NONE(void)
 { I3BG_Rpc_ResponseContent_union_ref_t uref; uref.type = I3BG_Rpc_ResponseContent_NONE; uref.value = 0; return uref; }
 static inline I3BG_Rpc_ResponseContent_union_ref_t I3BG_Rpc_ResponseContent_as_PauseResponse(I3BG_Rpc_PauseResponse_ref_t ref)
 { I3BG_Rpc_ResponseContent_union_ref_t uref; uref.type = I3BG_Rpc_ResponseContent_PauseResponse; uref.value = ref; return uref; }
@@ -141,7 +141,7 @@ static I3BG_Rpc_ResponseContent_union_ref_t I3BG_Rpc_ResponseContent_clone(flatb
     }
 }
 
-static inline I3BG_Rpc_MessageContent_union_ref_t I3BG_Rpc_MessageContent_as_NONE()
+static inline I3BG_Rpc_MessageContent_union_ref_t I3BG_Rpc_MessageContent_as_NONE(void)
 { I3BG_Rpc_MessageContent_union_ref_t uref; uref.type = I3BG_Rpc_MessageContent_NONE; uref.value = 0; return uref; }
 static inline I3BG_Rpc_MessageContent_union_ref_t I3BG_Rpc_MessageContent_as_Request(I3BG_Rpc_Request_ref_t ref)
 { I3BG_Rpc_MessageContent_union_ref_t uref; uref.type = I3BG_Rpc_MessageContent_Request; uref.value = ref; return uref; }

@@ -47,36 +47,64 @@ typedef const struct I3BG_Rpc_Message_table *I3BG_Rpc_Message_table_t;
 typedef struct I3BG_Rpc_Message_table *I3BG_Rpc_Message_mutable_table_t;
 typedef const flatbuffers_uoffset_t *I3BG_Rpc_Message_vec_t;
 typedef flatbuffers_uoffset_t *I3BG_Rpc_Message_mutable_vec_t;
+#ifndef I3BG_Rpc_PauseRequest_file_identifier
+#define I3BG_Rpc_PauseRequest_file_identifier flatbuffers_identifier
+#endif
+/* deprecated, use I3BG_Rpc_PauseRequest_file_identifier */
 #ifndef I3BG_Rpc_PauseRequest_identifier
 #define I3BG_Rpc_PauseRequest_identifier flatbuffers_identifier
 #endif
 #define I3BG_Rpc_PauseRequest_type_hash ((flatbuffers_thash_t)0x20d57df0)
 #define I3BG_Rpc_PauseRequest_type_identifier "\xf0\x7d\xd5\x20"
+#ifndef I3BG_Rpc_PauseResponse_file_identifier
+#define I3BG_Rpc_PauseResponse_file_identifier flatbuffers_identifier
+#endif
+/* deprecated, use I3BG_Rpc_PauseResponse_file_identifier */
 #ifndef I3BG_Rpc_PauseResponse_identifier
 #define I3BG_Rpc_PauseResponse_identifier flatbuffers_identifier
 #endif
 #define I3BG_Rpc_PauseResponse_type_hash ((flatbuffers_thash_t)0x8ea5493c)
 #define I3BG_Rpc_PauseResponse_type_identifier "\x3c\x49\xa5\x8e"
+#ifndef I3BG_Rpc_DiscoverRequest_file_identifier
+#define I3BG_Rpc_DiscoverRequest_file_identifier flatbuffers_identifier
+#endif
+/* deprecated, use I3BG_Rpc_DiscoverRequest_file_identifier */
 #ifndef I3BG_Rpc_DiscoverRequest_identifier
 #define I3BG_Rpc_DiscoverRequest_identifier flatbuffers_identifier
 #endif
 #define I3BG_Rpc_DiscoverRequest_type_hash ((flatbuffers_thash_t)0x5a7aa985)
 #define I3BG_Rpc_DiscoverRequest_type_identifier "\x85\xa9\x7a\x5a"
+#ifndef I3BG_Rpc_DiscoverResponse_file_identifier
+#define I3BG_Rpc_DiscoverResponse_file_identifier flatbuffers_identifier
+#endif
+/* deprecated, use I3BG_Rpc_DiscoverResponse_file_identifier */
 #ifndef I3BG_Rpc_DiscoverResponse_identifier
 #define I3BG_Rpc_DiscoverResponse_identifier flatbuffers_identifier
 #endif
 #define I3BG_Rpc_DiscoverResponse_type_hash ((flatbuffers_thash_t)0x80cb215b)
 #define I3BG_Rpc_DiscoverResponse_type_identifier "\x5b\x21\xcb\x80"
+#ifndef I3BG_Rpc_Request_file_identifier
+#define I3BG_Rpc_Request_file_identifier flatbuffers_identifier
+#endif
+/* deprecated, use I3BG_Rpc_Request_file_identifier */
 #ifndef I3BG_Rpc_Request_identifier
 #define I3BG_Rpc_Request_identifier flatbuffers_identifier
 #endif
 #define I3BG_Rpc_Request_type_hash ((flatbuffers_thash_t)0xd0b45f30)
 #define I3BG_Rpc_Request_type_identifier "\x30\x5f\xb4\xd0"
+#ifndef I3BG_Rpc_Response_file_identifier
+#define I3BG_Rpc_Response_file_identifier flatbuffers_identifier
+#endif
+/* deprecated, use I3BG_Rpc_Response_file_identifier */
 #ifndef I3BG_Rpc_Response_identifier
 #define I3BG_Rpc_Response_identifier flatbuffers_identifier
 #endif
 #define I3BG_Rpc_Response_type_hash ((flatbuffers_thash_t)0x2cfb807c)
 #define I3BG_Rpc_Response_type_identifier "\x7c\x80\xfb\x2c"
+#ifndef I3BG_Rpc_Message_file_identifier
+#define I3BG_Rpc_Message_file_identifier flatbuffers_identifier
+#endif
+/* deprecated, use I3BG_Rpc_Message_file_identifier */
 #ifndef I3BG_Rpc_Message_identifier
 #define I3BG_Rpc_Message_identifier flatbuffers_identifier
 #endif

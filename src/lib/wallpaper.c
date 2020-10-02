@@ -127,7 +127,6 @@ wpd_error_t select_random_wallpaper(const struct wpd_db_t *db, int width,
 }
 
 /*
- * TODO: Grok this; it's taken from:
  * http://vincentsanders.blogspot.com/2010/04/xcb-programming-is-hard.html
  */
 static xcb_format_t *wpd_find_format(xcb_connection_t *c, uint8_t depth,

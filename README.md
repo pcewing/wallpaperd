@@ -10,6 +10,19 @@ desktop environments.
 
 **WIP Warning:** This project is still heavily work in progress.
 
+## Configuration
+
+Configuration is done via a yaml file and is searched for based on the
+XDG spec:
+```
+---
+search_paths:
+    - "/home/john/Pictures/wallpapers"
+rotation:
+    enabled: true
+    frequency: 120
+```
+
 ## Dependencies:
 
 - xcb
